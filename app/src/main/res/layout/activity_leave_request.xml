@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1D20"
+    android:orientation="vertical">
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLeaveMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#212529"
+        app:tabIndicatorColor="#A67C52"
+        app:tabSelectedTextColor="#FFFFFF"
+        app:tabTextColor="#C4A882" />
+
+    <LinearLayout
+        android:id="@+id/layoutFormTab"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#212529"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Pengajuan Izin &amp; Sakit"
+                            android:textColor="#FFFFFF"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Pilih tanggal dari picker. Untuk sakit, lampiran surat wajib."
+                            android:textColor="#C4A882"
+                            android:textSize="12sp" />
+
+                        <RadioGroup
+                            android:id="@+id/rgLeaveType"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                            <RadioButton
+                                android:id="@+id/rbIzin"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:checked="true"
+                                android:text="Izin"
+                                android:textColor="#FFFFFF" />
+
+                            <RadioButton
+                                android:id="@+id/rbSakit"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Sakit"
+                                android:textColor="#FFFFFF" />
+                        </RadioGroup>
+
+                        <EditText
+                            android:id="@+id/etTanggalMulai"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="#2D3748"
+                            android:clickable="true"
+                            android:focusable="false"
+                            android:hint="Tanggal mulai"
+                            android:padding="12dp"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#9CA3AF" />
+
+                        <EditText
+                            android:id="@+id/etTanggalSelesai"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="#2D3748"
+                            android:clickable="true"
+                            android:focusable="false"
+                            android:hint="Tanggal selesai"
+                            android:padding="12dp"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#9CA3AF" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <EditText
+                                android:id="@+id/etJamMulai"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="#2D3748"
+                                android:clickable="true"
+                                android:focusable="false"
+                                android:hint="Jam mulai"
+                                android:padding="12dp"
+                                android:textColor="#FFFFFF"
+                                android:textColorHint="#9CA3AF" />
+
+                            <View
+                                android:layout_width="10dp"
+                                android:layout_height="1dp" />
+
+                            <EditText
+                                android:id="@+id/etJamSelesai"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="#2D3748"
+                                android:clickable="true"
+                                android:focusable="false"
+                                android:hint="Jam selesai"
+                                android:padding="12dp"
+                                android:textColor="#FFFFFF"
+                                android:textColorHint="#9CA3AF" />
+                        </LinearLayout>
+
+                        <EditText
+                            android:id="@+id/etAlasan"
+                            android:layout_width="match_parent"
+                            android:layout_height="120dp"
+                            android:layout_marginTop="10dp"
+                            android:background="#2D3748"
+                            android:gravity="top|start"
+                            android:hint="Alasan pengajuan"
+                            android:inputType="textMultiLine"
+                            android:padding="12dp"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#9CA3AF" />
+
+                        <Button
+                            android:id="@+id/btnPickAttachment"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:backgroundTint="#374151"
+                            android:text="Pilih Lampiran (izin opsional)"
+                            android:textAllCaps="false"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/tvAttachmentName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Belum ada lampiran"
+                            android:textColor="#C4A882"
+                            android:textSize="12sp" />
+
+                        <Button
+                            android:id="@+id/btnSubmitLeave"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:backgroundTint="#A67C52"
+                            android:text="Kirim Pengajuan"
+                            android:textAllCaps="false"
+                            android:textColor="#FFFFFF" />
+
+                        <ProgressBar
+                            android:id="@+id/progressLeave"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginTop="14dp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutHistoryTab"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Riwayat Pengajuan"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvEmptyLeave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Memuat data..."
+            android:textColor="#C4A882"
+            android:textSize="14sp" />
+
+        <ListView
+            android:id="@+id/listLeaveHistory"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="10dp"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="10dp"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>
