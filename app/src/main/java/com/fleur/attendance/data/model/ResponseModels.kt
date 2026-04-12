@@ -257,9 +257,9 @@ data class TodayAttendanceData(
 
 data class AttendanceRecord(
     val time: String,
-    val latitude: Double,
-    val longitude: Double,
-    val distance: Double,
+    val latitude: Double?,
+    val longitude: Double?,
+    val distance: Double?,
     val similarity: Double?,
     val photo: String?
 )

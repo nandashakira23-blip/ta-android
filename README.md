@@ -69,12 +69,14 @@ app/
 - **Production**: `https://api.fleuratelier.com/api/`
 
 ### Key Endpoints
-- `POST /check-nik` - Validasi NIK
-- `POST /activate` - Aktivasi akun
-- `POST /login` - Login dengan PIN
-- `POST /face-enrollment` - Registrasi wajah
-- `POST /clock-in` - Presensi masuk
-- `GET /employee/{id}/profile` - Profil karyawan
+- `POST /api/auth/check-nik` - Validasi NIK
+- `POST /api/auth/activate` - Aktivasi akun
+- `POST /api/auth/login` - Login dengan PIN
+- `POST /api/attendance/checkin` - Presensi masuk
+- `POST /api/attendance/checkout` - Presensi pulang
+- `GET /api/auth/profile/{id}` - Profil karyawan
+- `GET /api/attendance/today` - Presensi hari ini
+- `GET /api/attendance/history` - Riwayat presensi
 
 ## 📱 Screens Flow
 

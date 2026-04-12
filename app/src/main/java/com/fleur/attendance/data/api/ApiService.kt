@@ -56,8 +56,8 @@ interface ApiService {
         @Part photo: MultipartBody.Part
     ): Call<ClockOutResponse>
     
-    @GET("api/attendance/status/{karyawan_id}")
-    fun getAttendanceStatus(@Path("karyawan_id") karyawanId: Int): Call<AttendanceStatusResponse>
+    @GET("api/attendance/status/{id_karyawan}")
+    fun getAttendanceStatus(@Path("id_karyawan") karyawanId: Int): Call<AttendanceStatusResponse>
     
     @GET("api/attendance/history")
     fun getAttendanceHistory(
@@ -90,8 +90,8 @@ interface ApiService {
         @Part profile_picture: MultipartBody.Part?
     ): Call<UpdateProfileResponse>
     
-    @GET("api/schedule/today/{karyawan_id}")
-    fun getEmployeeWorkSchedule(@Path("karyawan_id") karyawanId: Int): Call<WorkScheduleResponse>
+    @GET("api/schedule/today/{id_karyawan}")
+    fun getEmployeeWorkSchedule(@Path("id_karyawan") karyawanId: Int): Call<WorkScheduleResponse>
     
     @GET("api/employee/face-reference")
     fun getEmployeeFaceReference(): Call<EmployeeReferencePhotoResponse>
