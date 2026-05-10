@@ -19,12 +19,12 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.2:3000/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://api-presensi.vercel.app/\"")
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.2:3000/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://api-presensi.vercel.app/\"")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
