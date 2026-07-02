@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="2dp"
-    app:cardBackgroundColor="#212529"
+    app:cardBackgroundColor="@color/dark_surface"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
@@ -26,7 +26,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="IZIN"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -34,13 +34,13 @@
                 android:id="@+id/tvStatusValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#374151"
+                android:background="@color/leave_status_pending_manager"
                 android:paddingLeft="10dp"
                 android:paddingTop="4dp"
                 android:paddingRight="10dp"
                 android:paddingBottom="4dp"
                 android:text="pending"
-                android:textColor="#E5E7EB"
+                android:textColor="@color/text_primary"
                 android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="2026-01-01 s/d 2026-01-01"
-            android:textColor="#C4A882"
+            android:textColor="@color/brown_400"
             android:textSize="12sp" />
 
         <TextView
@@ -60,7 +60,16 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             android:text="Jam: -"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvPenggantiValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Pengganti: -"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp" />
 
         <TextView
@@ -69,7 +78,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Alasan pengajuan..."
-            android:textColor="#E5E7EB"
+            android:textColor="@color/text_primary"
             android:textSize="13sp" />
 
         <TextView
@@ -78,7 +87,52 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Lampiran: tidak ada"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/layoutReplacementActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnApproveReplacement"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="Setujui"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                app:backgroundTint="@color/leave_status_approved"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRejectReplacement"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:text="Tolak"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                app:backgroundTint="@color/leave_status_rejected"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelLeave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Batalkan Pengajuan"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:visibility="gone"
+            app:backgroundTint="@color/leave_status_cancelled"
+            app:cornerRadius="8dp" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

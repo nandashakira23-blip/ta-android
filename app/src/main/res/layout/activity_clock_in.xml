@@ -219,7 +219,7 @@
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#80000000"
+        android:background="@color/loading_overlay"
         android:visibility="gone"
         android:elevation="10dp"
         android:clickable="true"

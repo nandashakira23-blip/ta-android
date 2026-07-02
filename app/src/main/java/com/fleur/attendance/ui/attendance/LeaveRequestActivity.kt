@@ -5,9 +5,12 @@ import android.app.TimePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -23,6 +26,7 @@ import com.fleur.attendance.R
 import com.fleur.attendance.data.api.ApiConfig
 import com.fleur.attendance.data.model.LeaveRequestItem
 import com.fleur.attendance.data.model.LeaveRequestPayload
+import com.fleur.attendance.data.model.ReplacementCandidate
 import com.fleur.attendance.data.repository.LeaveRepository
 import com.google.android.material.tabs.TabLayout
 import java.io.File
@@ -38,17 +42,24 @@ class LeaveRequestActivity : AppCompatActivity() {
     private lateinit var etTanggalSelesai: EditText
     private lateinit var etJamMulai: EditText
     private lateinit var etJamSelesai: EditText
+    private lateinit var actvPengganti: AutoCompleteTextView
+    private lateinit var btnClearPengganti: TextView
     private lateinit var etAlasan: EditText
     private lateinit var btnPickAttachment: Button
     private lateinit var tvAttachmentName: TextView
     private lateinit var btnSubmit: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var tvEmpty: TextView
+    private lateinit var tvEmptyReplacement: TextView
     private lateinit var listView: ListView
+    private lateinit var listReplacement: ListView
     private lateinit var tabLayout: TabLayout
     private lateinit var layoutFormTab: LinearLayout
     private lateinit var layoutHistoryTab: LinearLayout
+    private lateinit var layoutReplacementTab: LinearLayout
     private var selectedAttachmentUri: Uri? = null
+    private var replacementCandidates: List<ReplacementCandidateOption> = emptyList()
+    private var selectedReplacementCandidate: ReplacementCandidateOption? = null
 
     private val attachmentPickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -65,7 +76,7 @@ class LeaveRequestActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_leave_request)
 
-        supportActionBar?.title = "Izin & Sakit"
+        supportActionBar?.title = "Absensi"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         repository = LeaveRepository(this)
@@ -75,19 +86,25 @@ class LeaveRequestActivity : AppCompatActivity() {
         etTanggalSelesai = findViewById(R.id.etTanggalSelesai)
         etJamMulai = findViewById(R.id.etJamMulai)
         etJamSelesai = findViewById(R.id.etJamSelesai)
+        actvPengganti = findViewById(R.id.actvPengganti)
+        btnClearPengganti = findViewById(R.id.btnClearPengganti)
         etAlasan = findViewById(R.id.etAlasan)
         btnPickAttachment = findViewById(R.id.btnPickAttachment)
         tvAttachmentName = findViewById(R.id.tvAttachmentName)
         btnSubmit = findViewById(R.id.btnSubmitLeave)
         progressBar = findViewById(R.id.progressLeave)
         tvEmpty = findViewById(R.id.tvEmptyLeave)
+        tvEmptyReplacement = findViewById(R.id.tvEmptyReplacement)
         listView = findViewById(R.id.listLeaveHistory)
+        listReplacement = findViewById(R.id.listReplacementRequests)
         tabLayout = findViewById(R.id.tabLeaveMode)
         layoutFormTab = findViewById(R.id.layoutFormTab)
         layoutHistoryTab = findViewById(R.id.layoutHistoryTab)
+        layoutReplacementTab = findViewById(R.id.layoutReplacementTab)
 
         setupForm()
         setupTabs()
+        loadReplacementCandidates()
         loadHistory()
     }
 
@@ -101,6 +118,20 @@ class LeaveRequestActivity : AppCompatActivity() {
         etTanggalSelesai.setOnClickListener { showDatePicker(etTanggalSelesai) }
         etJamMulai.setOnClickListener { showTimePicker(etJamMulai) }
         etJamSelesai.setOnClickListener { showTimePicker(etJamSelesai) }
+        actvPengganti.threshold = 0
+        actvPengganti.setOnClickListener { actvPengganti.showDropDown() }
+        actvPengganti.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) actvPengganti.showDropDown()
+        }
+        actvPengganti.setOnItemClickListener { _, _, position, _ ->
+            val selected = actvPengganti.adapter.getItem(position) as? ReplacementCandidateOption
+            if (selected != null) {
+                lockReplacementCandidate(selected)
+            }
+        }
+        btnClearPengganti.setOnClickListener {
+            unlockReplacementCandidate(showDropdown = true)
+        }
         btnPickAttachment.setOnClickListener {
             attachmentPickerLauncher.launch("*/*")
         }
@@ -113,6 +144,7 @@ class LeaveRequestActivity : AppCompatActivity() {
     private fun setupTabs() {
         tabLayout.addTab(tabLayout.newTab().setText("Ajukan"))
         tabLayout.addTab(tabLayout.newTab().setText("Riwayat"))
+        tabLayout.addTab(tabLayout.newTab().setText("Pengganti"))
         showTab(0)
 
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -120,6 +152,8 @@ class LeaveRequestActivity : AppCompatActivity() {
                 showTab(tab?.position ?: 0)
                 if ((tab?.position ?: 0) == 1) {
                     loadHistory()
+                } else if ((tab?.position ?: 0) == 2) {
+                    loadReplacementRequests()
                 }
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
@@ -130,6 +164,7 @@ class LeaveRequestActivity : AppCompatActivity() {
     private fun showTab(position: Int) {
         layoutFormTab.visibility = if (position == 0) View.VISIBLE else View.GONE
         layoutHistoryTab.visibility = if (position == 1) View.VISIBLE else View.GONE
+        layoutReplacementTab.visibility = if (position == 2) View.VISIBLE else View.GONE
     }
 
     private fun showDatePicker(target: EditText) {
@@ -160,6 +195,7 @@ class LeaveRequestActivity : AppCompatActivity() {
 
     private fun getSelectedLeaveType(): String {
         return when (rgLeaveType.checkedRadioButtonId) {
+            R.id.rbCuti -> "cuti"
             R.id.rbSakit -> "sakit"
             else -> "izin"
         }
@@ -167,12 +203,16 @@ class LeaveRequestActivity : AppCompatActivity() {
 
     private fun submitRequest() {
         val leaveType = getSelectedLeaveType()
+        val replacementSelection = getSelectedReplacement()
+        if (!replacementSelection.isValid) return
+
         val payload = LeaveRequestPayload(
             jenis = leaveType,
             tanggalMulai = etTanggalMulai.text.toString().trim(),
             tanggalSelesai = etTanggalSelesai.text.toString().trim(),
             jamMulai = etJamMulai.text.toString().trim().ifBlank { null },
             jamSelesai = etJamSelesai.text.toString().trim().ifBlank { null },
+            idPengganti = replacementSelection.id,
             alasan = etAlasan.text.toString().trim()
         )
 
@@ -240,11 +280,111 @@ class LeaveRequestActivity : AppCompatActivity() {
         )
     }
 
+    private fun loadReplacementCandidates() {
+        repository.getReplacementCandidates(
+            onSuccess = { response ->
+                runOnUiThread {
+                    replacementCandidates = response.data.map { ReplacementCandidateOption(it) }
+                    bindReplacementCandidateDropdown()
+                    unlockReplacementCandidate(showDropdown = false)
+                }
+            },
+            onError = { error ->
+                runOnUiThread {
+                    replacementCandidates = emptyList()
+                    bindReplacementCandidateDropdown()
+                    unlockReplacementCandidate(showDropdown = false)
+                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    private fun bindReplacementCandidateDropdown() {
+        actvPengganti.setAdapter(
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                replacementCandidates
+            )
+        )
+    }
+
+    private fun lockReplacementCandidate(candidate: ReplacementCandidateOption) {
+        selectedReplacementCandidate = candidate
+        actvPengganti.setText(candidate.toString(), false)
+        actvPengganti.dismissDropDown()
+        actvPengganti.clearFocus()
+        actvPengganti.inputType = InputType.TYPE_NULL
+        actvPengganti.isFocusable = false
+        actvPengganti.isFocusableInTouchMode = false
+        actvPengganti.isCursorVisible = false
+        actvPengganti.isLongClickable = false
+        btnClearPengganti.visibility = View.VISIBLE
+    }
+
+    private fun unlockReplacementCandidate(showDropdown: Boolean) {
+        selectedReplacementCandidate = null
+        actvPengganti.setText("", false)
+        actvPengganti.inputType = InputType.TYPE_CLASS_TEXT
+        actvPengganti.isFocusable = true
+        actvPengganti.isFocusableInTouchMode = true
+        actvPengganti.isCursorVisible = true
+        actvPengganti.isLongClickable = true
+        btnClearPengganti.visibility = View.GONE
+
+        if (showDropdown) {
+            actvPengganti.requestFocus()
+            actvPengganti.post { actvPengganti.showDropDown() }
+        }
+    }
+
+    private fun getSelectedReplacement(): ReplacementSelection {
+        val replacementText = actvPengganti.text.toString().trim()
+        if (replacementText.isBlank()) {
+            selectedReplacementCandidate = null
+            return ReplacementSelection(isValid = true, id = null)
+        }
+
+        val selected = selectedReplacementCandidate
+            ?.takeIf { it.toString().equals(replacementText, ignoreCase = true) }
+
+        if (selected == null) {
+            Toast.makeText(this, "Pilih karyawan pengganti dari dropdown", Toast.LENGTH_SHORT).show()
+            actvPengganti.requestFocus()
+            actvPengganti.showDropDown()
+            return ReplacementSelection(isValid = false, id = null)
+        }
+
+        selectedReplacementCandidate = selected
+        return ReplacementSelection(isValid = true, id = selected.id)
+    }
+
+    private fun loadReplacementRequests() {
+        setLoading(true)
+        repository.getReplacementRequests(
+            onSuccess = { response ->
+                runOnUiThread {
+                    setLoading(false)
+                    renderReplacementRequests(response.data)
+                }
+            },
+            onError = { error ->
+                runOnUiThread {
+                    setLoading(false)
+                    tvEmptyReplacement.visibility = View.VISIBLE
+                    listReplacement.visibility = View.GONE
+                    tvEmptyReplacement.text = error
+                }
+            }
+        )
+    }
+
     private fun renderHistory(items: List<LeaveRequestItem>) {
         if (items.isEmpty()) {
             tvEmpty.visibility = View.VISIBLE
             listView.visibility = View.GONE
-            tvEmpty.text = "Belum ada pengajuan izin atau sakit"
+            tvEmpty.text = "Belum ada pengajuan Absensi"
             return
         }
 
@@ -253,11 +393,83 @@ class LeaveRequestActivity : AppCompatActivity() {
         listView.adapter = LeaveHistoryAdapter(items)
     }
 
+    private fun renderReplacementRequests(items: List<LeaveRequestItem>) {
+        if (items.isEmpty()) {
+            tvEmptyReplacement.visibility = View.VISIBLE
+            listReplacement.visibility = View.GONE
+            tvEmptyReplacement.text = "Tidak ada permintaan pengganti"
+            return
+        }
+
+        tvEmptyReplacement.visibility = View.GONE
+        listReplacement.visibility = View.VISIBLE
+        listReplacement.adapter = LeaveHistoryAdapter(items, showReplacementActions = true)
+    }
+
+    private fun decideReplacementRequest(item: LeaveRequestItem, approve: Boolean) {
+        setLoading(true)
+        val note = if (approve) "Bersedia menjadi pengganti" else "Tidak bersedia menjadi pengganti"
+        val onSuccess: (com.fleur.attendance.data.model.ApiResponse<Any>) -> Unit = { response ->
+            runOnUiThread {
+                setLoading(false)
+                Toast.makeText(this, response.message, Toast.LENGTH_SHORT).show()
+                loadReplacementRequests()
+            }
+        }
+        val onError: (String) -> Unit = { error ->
+            runOnUiThread {
+                setLoading(false)
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        if (approve) {
+            repository.approveReplacementRequest(item.id, note, onSuccess, onError)
+        } else {
+            repository.rejectReplacementRequest(item.id, note, onSuccess, onError)
+        }
+    }
+
+    private fun isCancellableStatus(status: String): Boolean {
+        return when (status.lowercase(Locale.getDefault())) {
+            "pending", "menunggu_manager", "menunggu_pengganti" -> true
+            else -> false
+        }
+    }
+
+    private fun confirmCancelLeaveRequest(item: LeaveRequestItem) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Batalkan Pengajuan")
+            .setMessage("Yakin membatalkan pengajuan ${item.jenis.uppercase(Locale.getDefault())} ini?")
+            .setPositiveButton("Ya, Batalkan") { _, _ ->
+                setLoading(true)
+                repository.cancelLeaveRequest(
+                    requestId = item.id,
+                    onSuccess = { response ->
+                        runOnUiThread {
+                            setLoading(false)
+                            Toast.makeText(this, response.message, Toast.LENGTH_SHORT).show()
+                            loadHistory()
+                        }
+                    },
+                    onError = { error ->
+                        runOnUiThread {
+                            setLoading(false)
+                            Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+            .setNegativeButton("Tidak", null)
+            .show()
+    }
+
     private fun clearForm() {
         etTanggalMulai.text?.clear()
         etTanggalSelesai.text?.clear()
         etJamMulai.text?.clear()
         etJamSelesai.text?.clear()
+        unlockReplacementCandidate(showDropdown = false)
         etAlasan.text?.clear()
         rgLeaveType.check(R.id.rbIzin)
         selectedAttachmentUri = null
@@ -297,11 +509,25 @@ class LeaveRequestActivity : AppCompatActivity() {
     }
 
     private fun getStatusColor(status: String): Int {
+        val resId = when (status.lowercase(Locale.getDefault())) {
+            "approved", "disetujui" -> R.color.leave_status_approved
+            "rejected", "ditolak", "ditolak_pengganti" -> R.color.leave_status_rejected
+            "cancelled", "dibatalkan" -> R.color.leave_status_cancelled
+            "menunggu_pengganti" -> R.color.leave_status_pending_replacement
+            else -> R.color.leave_status_pending_manager
+        }
+        return androidx.core.content.ContextCompat.getColor(this, resId)
+    }
+
+    private fun formatStatusLabel(status: String): String {
         return when (status.lowercase(Locale.getDefault())) {
-            "approved" -> android.graphics.Color.parseColor("#14532D")
-            "rejected" -> android.graphics.Color.parseColor("#7F1D1D")
-            "cancelled" -> android.graphics.Color.parseColor("#374151")
-            else -> android.graphics.Color.parseColor("#78350F")
+            "approved", "disetujui" -> "DISETUJUI"
+            "rejected", "ditolak" -> "DITOLAK"
+            "ditolak_pengganti" -> "DITOLAK PENGGANTI"
+            "cancelled", "dibatalkan" -> "DIBATALKAN"
+            "menunggu_pengganti" -> "MENUNGGU PENGGANTI"
+            "pending", "menunggu_manager" -> "MENUNGGU MANAGER"
+            else -> status.uppercase(Locale.getDefault())
         }
     }
 
@@ -329,7 +555,8 @@ class LeaveRequestActivity : AppCompatActivity() {
     }
 
     private inner class LeaveHistoryAdapter(
-        private val items: List<LeaveRequestItem>
+        private val items: List<LeaveRequestItem>,
+        private val showReplacementActions: Boolean = false
     ) : BaseAdapter() {
         override fun getCount(): Int = items.size
         override fun getItem(position: Int): Any = items[position]
@@ -344,11 +571,20 @@ class LeaveRequestActivity : AppCompatActivity() {
             val tvStatus = view.findViewById<TextView>(R.id.tvStatusValue)
             val tvPeriode = view.findViewById<TextView>(R.id.tvPeriodeValue)
             val tvJam = view.findViewById<TextView>(R.id.tvJamValue)
+            val tvPengganti = view.findViewById<TextView>(R.id.tvPenggantiValue)
             val tvAlasan = view.findViewById<TextView>(R.id.tvAlasanValue)
             val tvLampiran = view.findViewById<TextView>(R.id.tvLampiranValue)
+            val layoutActions = view.findViewById<LinearLayout>(R.id.layoutReplacementActions)
+            val btnApprove = view.findViewById<Button>(R.id.btnApproveReplacement)
+            val btnReject = view.findViewById<Button>(R.id.btnRejectReplacement)
+            val btnCancel = view.findViewById<Button>(R.id.btnCancelLeave)
 
-            tvJenis.text = item.jenis.uppercase(Locale.getDefault())
-            tvStatus.text = item.status.uppercase(Locale.getDefault())
+            tvJenis.text = if (showReplacementActions && !item.namaKaryawan.isNullOrBlank()) {
+                "${item.jenis.uppercase(Locale.getDefault())} - ${item.namaKaryawan}"
+            } else {
+                item.jenis.uppercase(Locale.getDefault())
+            }
+            tvStatus.text = formatStatusLabel(item.status)
             tvStatus.setBackgroundColor(getStatusColor(item.status))
 
             val tanggalMulai = formatApiDate(item.tanggalMulai)
@@ -367,24 +603,83 @@ class LeaveRequestActivity : AppCompatActivity() {
                 "Jam: full day"
             }
 
+            tvPengganti.text = if (showReplacementActions) {
+                "Pemohon: ${item.namaKaryawan ?: "-"}"
+            } else when {
+                !item.namaPengganti.isNullOrBlank() && !item.approvedPenggantiAt.isNullOrBlank() ->
+                    "Pengganti: ${item.namaPengganti} (sudah setuju)"
+                !item.namaPengganti.isNullOrBlank() ->
+                    "Pengganti: ${item.namaPengganti}"
+                item.idPengganti != null ->
+                    "Pengganti: ID ${item.idPengganti}"
+                else -> "Pengganti: -"
+            }
+
             tvAlasan.text = item.alasan
 
             if (!item.lampiran.isNullOrBlank()) {
                 tvLampiran.text = "Lampiran: tersedia (ketuk untuk buka)"
-                tvLampiran.setTextColor(android.graphics.Color.parseColor("#A67C52"))
+                tvLampiran.setTextColor(androidx.core.content.ContextCompat.getColor(this@LeaveRequestActivity, R.color.primary_brown))
                 tvLampiran.setOnClickListener {
                     val normalized = item.lampiran.replace("\\", "/").removePrefix("public/")
                     val baseUrl = ApiConfig.getBaseUrl().trimEnd('/')
-                    val fullUrl = "$baseUrl/$normalized"
+                    val fullUrl = if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+                        normalized
+                    } else {
+                        "$baseUrl/${normalized.removePrefix("/")}"
+                    }
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(fullUrl)))
                 }
             } else {
                 tvLampiran.text = "Lampiran: tidak ada"
-                tvLampiran.setTextColor(android.graphics.Color.parseColor("#9CA3AF"))
+                tvLampiran.setTextColor(androidx.core.content.ContextCompat.getColor(this@LeaveRequestActivity, R.color.text_secondary))
                 tvLampiran.setOnClickListener(null)
+            }
+
+            if (showReplacementActions && item.status.equals("menunggu_pengganti", ignoreCase = true)) {
+                layoutActions.visibility = View.VISIBLE
+                btnApprove.setOnClickListener { decideReplacementRequest(item, approve = true) }
+                btnReject.setOnClickListener { decideReplacementRequest(item, approve = false) }
+            } else {
+                layoutActions.visibility = View.GONE
+                btnApprove.setOnClickListener(null)
+                btnReject.setOnClickListener(null)
+            }
+
+            // Tombol batalkan hanya di tab Riwayat untuk pengajuan yang belum diputus manager
+            if (!showReplacementActions && isCancellableStatus(item.status)) {
+                btnCancel.visibility = View.VISIBLE
+                btnCancel.setOnClickListener { confirmCancelLeaveRequest(item) }
+            } else {
+                btnCancel.visibility = View.GONE
+                btnCancel.setOnClickListener(null)
             }
 
             return view
         }
     }
+
+    private data class ReplacementCandidateOption(
+        val id: Int,
+        val nik: String,
+        val nama: String,
+        val jabatan: String?
+    ) {
+        constructor(candidate: ReplacementCandidate) : this(
+            id = candidate.id,
+            nik = candidate.nik,
+            nama = candidate.nama,
+            jabatan = candidate.namaJabatan
+        )
+
+        override fun toString(): String {
+            val suffix = jabatan?.takeIf { it.isNotBlank() }?.let { " - $it" } ?: ""
+            return "$nama ($nik)$suffix"
+        }
+    }
+
+    private data class ReplacementSelection(
+        val isValid: Boolean,
+        val id: Int?
+    )
 }

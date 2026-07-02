@@ -51,7 +51,7 @@ class ActivationPinActivity : AppCompatActivity() {
         if (pin.isEmpty()) {
             binding.tilPin.error = getString(R.string.validation_pin_required)
             isValid = false
-        } else if (pin.length != 4 || !pin.all { it.isDigit() }) {
+        } else if (pin.length != 6 || !pin.all { it.isDigit() }) {
             binding.tilPin.error = getString(R.string.validation_pin_invalid)
             isValid = false
         } else {

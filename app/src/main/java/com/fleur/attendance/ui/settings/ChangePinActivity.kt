@@ -60,7 +60,7 @@ class ChangePinActivity : AppCompatActivity() {
         if (currentPin.isEmpty()) {
             binding.tilCurrentPin.error = getString(R.string.validation_pin_required)
             isValid = false
-        } else if (currentPin.length != 4) {
+        } else if (currentPin.length != 6) {
             binding.tilCurrentPin.error = getString(R.string.validation_pin_invalid)
             isValid = false
         } else {
@@ -71,7 +71,7 @@ class ChangePinActivity : AppCompatActivity() {
         if (newPin.isEmpty()) {
             binding.tilNewPin.error = getString(R.string.validation_pin_required)
             isValid = false
-        } else if (newPin.length != 4) {
+        } else if (newPin.length != 6) {
             binding.tilNewPin.error = getString(R.string.validation_pin_invalid)
             isValid = false
         } else if (newPin == currentPin) {
@@ -85,7 +85,7 @@ class ChangePinActivity : AppCompatActivity() {
         if (confirmPin.isEmpty()) {
             binding.tilConfirmPin.error = getString(R.string.validation_pin_required)
             isValid = false
-        } else if (confirmPin.length != 4) {
+        } else if (confirmPin.length != 6) {
             binding.tilConfirmPin.error = getString(R.string.validation_pin_invalid)
             isValid = false
         } else if (newPin != confirmPin) {

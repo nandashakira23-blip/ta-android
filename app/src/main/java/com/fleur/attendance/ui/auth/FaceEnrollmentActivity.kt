@@ -36,7 +36,7 @@ class FaceEnrollmentActivity : AppCompatActivity() {
     private lateinit var pin: String
     private var isReactivation: Boolean = false
     private val capturedPhotoPaths = mutableListOf<String>()
-    private val requiredReferencePhotos = 3
+    private val requiredReferencePhotos = 15  // burst target: many multi-pose frames captured in one tap
     private var handoffToNextStep = false
 
     companion object {
@@ -128,37 +128,47 @@ class FaceEnrollmentActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
+    // One tap captures a BURST of frames while the user slowly rotates their head
+    // (front -> right -> left -> up -> down). Many multi-pose references => higher accuracy.
     private fun takePhoto() {
-        val capture = imageCapture ?: return
-
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
-        val photoFile = File(filesDir, "$name.jpg")
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
         binding.btnCapture.isEnabled = false
+        binding.tvFaceEnrollmentInstruction.text =
+            "Tahan & putar wajah perlahan: depan → kanan → kiri → atas → bawah"
+        captureBurstFrame()
+    }
+
+    private fun captureBurstFrame() {
+        val capture = imageCapture ?: run {
+            binding.btnCapture.isEnabled = true
+            showError("Kamera belum siap")
+            return
+        }
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
+        val photoFile = File(filesDir, "${name}_${capturedPhotoPaths.size}.jpg")
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
         capture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
-                    Log.e("FaceEnrollment", "Photo capture failed: ${exception.message}", exception)
-                    binding.btnCapture.isEnabled = true
-                    showError("Gagal mengambil foto: ${exception.message}")
+                    Log.e("FaceEnrollment", "Burst capture failed: ${exception.message}", exception)
+                    // Tolerate occasional frame errors: proceed if we already have enough, else stop.
+                    if (capturedPhotoPaths.size >= 3) {
+                        activateAccount()
+                    } else {
+                        binding.btnCapture.isEnabled = true
+                        showError("Gagal mengambil foto: ${exception.message}")
+                    }
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     capturedPhotoPaths.add(photoFile.absolutePath)
+                    updateCaptureProgress()
                     if (capturedPhotoPaths.size >= requiredReferencePhotos) {
                         activateAccount()
                     } else {
-                        binding.btnCapture.isEnabled = true
-                        updateCaptureProgress()
-                        Toast.makeText(
-                            this@FaceEnrollmentActivity,
-                            "Foto ${capturedPhotoPaths.size}/$requiredReferencePhotos tersimpan",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        captureBurstFrame()
                     }
                 }
             }
@@ -166,15 +176,15 @@ class FaceEnrollmentActivity : AppCompatActivity() {
     }
 
     private fun activateAccount() {
-        if (pin.length != 4 || !pin.all { it.isDigit() }) {
+        if (pin.length != 6 || !pin.all { it.isDigit() }) {
             binding.btnCapture.isEnabled = true
             showError("PIN tidak valid. Silakan ulang dari langkah PIN.")
             return
         }
 
-        if (capturedPhotoPaths.size != requiredReferencePhotos) {
+        if (capturedPhotoPaths.size < 3) {
             binding.btnCapture.isEnabled = true
-            showError("Wajib 3 foto referensi wajah")
+            showError("Foto wajah kurang. Ulangi dan putar wajah perlahan.")
             return
         }
         val files = capturedPhotoPaths.map { File(it) }
@@ -198,6 +208,8 @@ class FaceEnrollmentActivity : AppCompatActivity() {
                     photoFiles.forEach { it.delete() }
 
                     if (response.success) {
+                        // Remember (device-level) that activation happened -> next launch starts at Login.
+                        com.fleur.attendance.utils.SessionManager(this).setEverActivated()
                         Toast.makeText(
                             this,
                             "Aktivasi berhasil. Silakan login dengan NIK dan PIN Anda.",

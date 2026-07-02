@@ -115,8 +115,8 @@ class AuthRepository(private val context: Context) {
         onSuccess: (ActivateResponse) -> Unit,
         onError: (String) -> Unit
     ) {
-        if (facePhotoFiles.size != 3) {
-            onError("Aktivasi membutuhkan 3 foto wajah referensi")
+        if (facePhotoFiles.isEmpty()) {
+            onError("Aktivasi membutuhkan foto wajah referensi")
             return
         }
 
@@ -126,23 +126,17 @@ class AuthRepository(private val context: Context) {
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
             ?.toRequestBody("text/plain".toMediaTypeOrNull())
-        val photoPart1 = MultipartBody.Part.createFormData(
-            "face_photo_1",
-            facePhotoFiles[0].name,
-            facePhotoFiles[0].asRequestBody("image/*".toMediaTypeOrNull())
-        )
-        val photoPart2 = MultipartBody.Part.createFormData(
-            "face_photo_2",
-            facePhotoFiles[1].name,
-            facePhotoFiles[1].asRequestBody("image/*".toMediaTypeOrNull())
-        )
-        val photoPart3 = MultipartBody.Part.createFormData(
-            "face_photo_3",
-            facePhotoFiles[2].name,
-            facePhotoFiles[2].asRequestBody("image/*".toMediaTypeOrNull())
-        )
-        
-        apiService.activate(nikBody, pinBody, emailBody, photoPart1, photoPart2, photoPart3)
+
+        // Multi-pose burst: send every captured frame; the server keeps the clear ones as references.
+        val photoParts = facePhotoFiles.mapIndexed { i, file ->
+            MultipartBody.Part.createFormData(
+                "face_photo_${i + 1}",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+        }
+
+        apiService.activate(nikBody, pinBody, emailBody, photoParts)
             .enqueue(object : Callback<ActivateResponse> {
                 override fun onResponse(
                     call: Call<ActivateResponse>,

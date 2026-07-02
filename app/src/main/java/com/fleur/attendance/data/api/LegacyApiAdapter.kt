@@ -93,11 +93,11 @@ class LegacyApiAdapter(private val context: Context) {
     fun clockIn(
         latitude: Double,
         longitude: Double,
-        photoFile: File,
+        photoFiles: List<File>,
         onSuccess: (ClockInResponse) -> Unit,
         onError: (String) -> Unit
     ) {
-        attendanceRepo.clockIn(latitude, longitude, photoFile, onSuccess, onError)
+        attendanceRepo.clockIn(latitude, longitude, photoFiles, onSuccess, onError)
     }
     
     /**
@@ -106,11 +106,11 @@ class LegacyApiAdapter(private val context: Context) {
     fun clockOut(
         latitude: Double,
         longitude: Double,
-        photoFile: File,
+        photoFiles: List<File>,
         onSuccess: (ClockOutResponse) -> Unit,
         onError: (String) -> Unit
     ) {
-        attendanceRepo.clockOut(latitude, longitude, photoFile, onSuccess, onError)
+        attendanceRepo.clockOut(latitude, longitude, photoFiles, onSuccess, onError)
     }
     
     /**

@@ -49,6 +49,11 @@ data class ValidateLocationRequest(
     val longitude: Double
 )
 
+data class BreakEndRequest(
+    val latitude: Double,
+    val longitude: Double
+)
+
 // ===== LEAVE REQUEST MODELS =====
 
 data class LeaveRequestPayload(
@@ -61,5 +66,7 @@ data class LeaveRequestPayload(
     val jamMulai: String? = null,
     @SerializedName("jam_selesai")
     val jamSelesai: String? = null,
+    @SerializedName("id_pengganti")
+    val idPengganti: Int? = null,
     val alasan: String
 )

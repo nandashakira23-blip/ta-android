@@ -1,5 +1,6 @@
 package com.fleur.attendance.ui.main
 
+import android.annotation.SuppressLint
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,6 +9,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -20,6 +22,7 @@ import com.fleur.attendance.ui.attendance.ClockOutActivity
 import com.fleur.attendance.utils.SessionManager
 import com.fleur.attendance.data.model.AttendanceStatus
 import com.fleur.attendance.data.model.AttendanceStatusResponse
+import com.fleur.attendance.data.model.BreakInfo
 import com.fleur.attendance.data.model.WorkScheduleInfo
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -45,6 +48,9 @@ class MainActivity : AppCompatActivity() {
     private var canClockOutNow = false
     private var clockInDisabledReason: String? = null
     private var clockOutDisabledReason: String? = null
+    private var canStartBreakNow = false
+    private var canEndBreakNow = false
+    private var lastBreakInfo: BreakInfo? = null
     
     companion object {
         private const val REQUEST_CODE_PERMISSIONS = 100
@@ -125,6 +131,10 @@ class MainActivity : AppCompatActivity() {
         binding?.btnClockIn?.setOnClickListener {
             handleClockButtonClick()
         }
+
+        binding?.btnBreakAction?.setOnClickListener {
+            handleBreakButtonClick()
+        }
         
         // Profile Photo
         binding?.ivProfilePhoto?.setOnClickListener {
@@ -177,7 +187,35 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    
+
+    private fun handleBreakButtonClick() {
+        when {
+            canStartBreakNow -> openBreakStart()
+            canEndBreakNow -> openBreakEnd()
+            else -> showToast("Fitur istirahat belum tersedia untuk kondisi presensi saat ini")
+        }
+    }
+
+    private fun openBreakStart() {
+        val intent = Intent(this, com.fleur.attendance.ui.attendance.BreakStartActivity::class.java)
+        intent.putExtra("allowance", lastBreakInfo?.breakAllowanceMinutes ?: 60)
+        startActivity(intent)
+    }
+
+    private fun openBreakEnd() {
+        val location = currentLocation
+        if (location == null) {
+            getCurrentLocation()
+            showToast("Menunggu lokasi GPS untuk menyelesaikan istirahat")
+            return
+        }
+        val intent = Intent(this, com.fleur.attendance.ui.attendance.BreakEndActivity::class.java)
+        intent.putExtra("elapsed", lastBreakInfo?.activeDurationMinutes ?: lastBreakInfo?.runningTotalMinutes ?: 0)
+        intent.putExtra("lat", location.latitude)
+        intent.putExtra("lng", location.longitude)
+        startActivity(intent)
+    }
+
     private fun openProfile() {
         val intent = Intent(this, com.fleur.attendance.ui.profile.ProfileActivity::class.java)
         startActivity(intent)
@@ -214,6 +252,9 @@ class MainActivity : AppCompatActivity() {
         binding?.btnClockIn?.alpha = 0.5f
         binding?.tvClockInfo?.text = "Memuat jadwal..."
         binding?.tvClockInfo?.visibility = android.view.View.VISIBLE
+        binding?.cardBreakSection?.visibility = android.view.View.GONE
+        canStartBreakNow = false
+        canEndBreakNow = false
     }
     
     private fun loadAttendanceFromAPI() {
@@ -276,6 +317,8 @@ class MainActivity : AppCompatActivity() {
         } else {
             showNoScheduleState()
         }
+
+        updateBreakCard(data.breakInfo, data.hasCheckedIn, data.hasCheckedOut)
     }
     
     private fun updateAttendanceTimes(data: AttendanceStatus) {
@@ -390,6 +433,101 @@ class MainActivity : AppCompatActivity() {
         binding?.cardWorkSchedule?.visibility = android.view.View.GONE
         binding?.circularButtonContainer?.visibility = android.view.View.GONE
         binding?.bottomStatsSection?.visibility = android.view.View.GONE
+        hideBreakCard(animated = false)
+    }
+
+    private fun updateBreakCard(breakInfo: BreakInfo?, hasCheckedIn: Boolean, hasCheckedOut: Boolean) {
+        lastBreakInfo = breakInfo
+        val isBreakFinished = breakInfo?.status == "selesai" && breakInfo.isOnBreak.not()
+        val shouldShow = hasCheckedIn && !hasCheckedOut && !isBreakFinished
+        if (!shouldShow) {
+            hideBreakCard(animated = isBreakFinished)
+            return
+        }
+        showBreakCard()
+
+        canStartBreakNow = breakInfo?.canStartBreak ?: true
+        canEndBreakNow = breakInfo?.canEndBreak ?: false
+
+        val totalMinutes = breakInfo?.runningTotalMinutes?.takeIf { it > 0 } ?: (breakInfo?.totalMenit ?: 0)
+        val allowanceMinutes = breakInfo?.breakAllowanceMinutes ?: 60
+        val countedMinutes = breakInfo?.countedBreakMinutes?.takeIf { it > 0 } ?: 0
+        val overageMinutes = breakInfo?.breakOverageMinutes ?: 0
+        val overageText = if (overageMinutes > 0) " (lebih ${formatMinutes(overageMinutes)})" else ""
+        val countedText = if (countedMinutes > 0) " / Dihitung: ${formatMinutes(countedMinutes)}" else ""
+        binding?.tvBreakDuration?.text = "Total: ${formatMinutes(totalMinutes)} / Jatah: ${formatMinutes(allowanceMinutes)}$countedText$overageText"
+
+        when {
+            canEndBreakNow -> {
+                val start = breakInfo?.activeStartedAt?.let { formatDateTimeForDisplay(it) } ?: "-"
+                binding?.tvBreakStatus?.text = "Istirahat berlangsung sejak $start"
+                binding?.btnBreakAction?.text = "Selesai Istirahat"
+                binding?.btnBreakAction?.isEnabled = true
+            }
+            canStartBreakNow -> {
+                binding?.tvBreakStatus?.text = "Tidak sedang istirahat"
+                binding?.btnBreakAction?.text = "Mulai Istirahat"
+                binding?.btnBreakAction?.isEnabled = true
+            }
+            else -> {
+                binding?.tvBreakStatus?.text = "Istirahat tidak tersedia"
+                binding?.btnBreakAction?.text = "Istirahat"
+                binding?.btnBreakAction?.isEnabled = false
+            }
+        }
+    }
+
+    private fun showBreakCard() {
+        val card = binding?.cardBreakSection ?: return
+        card.animate().cancel()
+        if (card.visibility != View.VISIBLE) {
+            card.alpha = 0f
+            card.scaleY = 0.96f
+            card.translationY = -12f
+            card.visibility = View.VISIBLE
+        }
+
+        card.animate()
+            .alpha(1f)
+            .scaleY(1f)
+            .translationY(0f)
+            .setDuration(220L)
+            .start()
+    }
+
+    private fun hideBreakCard(animated: Boolean) {
+        val card = binding?.cardBreakSection ?: return
+        canStartBreakNow = false
+        canEndBreakNow = false
+        card.animate().cancel()
+
+        if (card.visibility != View.VISIBLE) {
+            card.alpha = 1f
+            card.scaleY = 1f
+            card.translationY = 0f
+            return
+        }
+
+        if (!animated) {
+            card.visibility = View.GONE
+            card.alpha = 1f
+            card.scaleY = 1f
+            card.translationY = 0f
+            return
+        }
+
+        card.animate()
+            .alpha(0f)
+            .scaleY(0.96f)
+            .translationY(-12f)
+            .setDuration(240L)
+            .withEndAction {
+                card.visibility = View.GONE
+                card.alpha = 1f
+                card.scaleY = 1f
+                card.translationY = 0f
+            }
+            .start()
     }
     
     // ========== BUTTON SETUP ==========
@@ -513,17 +651,23 @@ class MainActivity : AppCompatActivity() {
         binding?.locationStatusBar?.setBackgroundColor(ContextCompat.getColor(this, backgroundColor))
     }
     
+    @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
         if (!hasLocationPermission()) return
         
-        fusedLocationClient?.lastLocation?.addOnSuccessListener { location ->
-            currentLocation = location ?: run {
-                requestFreshLocation()
-                return@addOnSuccessListener
+        try {
+            fusedLocationClient?.lastLocation?.addOnSuccessListener { location ->
+                currentLocation = location ?: run {
+                    requestFreshLocation()
+                    return@addOnSuccessListener
+                }
             }
+        } catch (error: SecurityException) {
+            Log.e("MainActivity", "Location permission rejected", error)
         }
     }
     
+    @SuppressLint("MissingPermission")
     private fun requestFreshLocation() {
         if (!hasLocationPermission()) return
         
@@ -540,7 +684,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        try {
+            fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        } catch (error: SecurityException) {
+            Log.e("MainActivity", "Fresh location permission rejected", error)
+        }
     }
     
     // ========== PROFILE PICTURE ==========
@@ -555,7 +703,11 @@ class MainActivity : AppCompatActivity() {
                 onSuccess = { profile ->
                     try {
                         val photoUrl = profile.employee.profilePicture?.let { picture ->
-                            "${apiAdapter.getBaseUrl().removeSuffix("/api/")}/$picture"
+                            if (picture.startsWith("http://") || picture.startsWith("https://")) {
+                                picture
+                            } else {
+                                "${apiAdapter.getBaseUrl().removeSuffix("/api/")}/${picture.removePrefix("/")}"
+                            }
                         }
                         
                         photoUrl?.let { url ->
@@ -657,6 +809,26 @@ class MainActivity : AppCompatActivity() {
             if (time != null && time.length >= 5) time.substring(0, 5) else time ?: "-"
         } catch (e: Exception) {
             time ?: "-"
+        }
+    }
+
+    private fun formatMinutes(totalMinutes: Int): String {
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return if (hours > 0) {
+            "$hours jam $minutes menit"
+        } else {
+            "$minutes menit"
+        }
+    }
+
+    private fun formatDateTimeForDisplay(value: String): String {
+        return try {
+            val normalized = value.replace('T', ' ')
+            val timePart = normalized.split(' ').lastOrNull() ?: value
+            if (timePart.length >= 5) timePart.substring(0, 5) else value
+        } catch (e: Exception) {
+            value
         }
     }
     

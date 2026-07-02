@@ -30,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
     }
     
     private fun setupUI() {
+        // Prefill NIK if passed from the activation-status check (CekStatusActivity)
+        intent.getStringExtra("nik")?.takeIf { it.isNotBlank() }?.let { binding.etNik.setText(it) }
         // Set focus to NIK input
         binding.etNik.requestFocus()
     }
@@ -67,7 +69,7 @@ class LoginActivity : AppCompatActivity() {
         if (pin.isEmpty()) {
             binding.tilPin.error = getString(R.string.validation_pin_required)
             isValid = false
-        } else if (pin.length != 4) {
+        } else if (pin.length != 6) {
             binding.tilPin.error = getString(R.string.validation_pin_invalid)
             isValid = false
         } else {
@@ -125,7 +127,8 @@ class LoginActivity : AppCompatActivity() {
                 if (response.success && response.data != null) {
                     Log.d(TAG, "Login successful")
                     sessionManager.saveUserSession(response.data.employee)
-                    
+                    sessionManager.setEverActivated() // device has a known account -> default to Login next time
+
                     // Navigate to main activity
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()

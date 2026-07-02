@@ -218,43 +218,33 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="Aksi Akun"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditProfile"
                 style="@style/PrimaryButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="10dp"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
                 android:text="Edit Profil"
-                android:textSize="16sp" />
+                android:textSize="14sp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnChangePin"
                 style="@style/SecondaryButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="10dp"
+                android:layout_height="48dp"
+                android:layout_marginBottom="16dp"
                 android:text="Ubah PIN"
-                android:textSize="16sp" />
+                android:textSize="14sp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogout"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:strokeColor="@color/error_red"
-                android:text="Logout"
+                android:layout_height="wrap_content"
+                android:text="Keluar Akun"
                 android:textAllCaps="false"
-                android:textColor="@color/error_red"
-                android:textSize="16sp" />
+                android:textColor="@color/brown_300"
+                android:textSize="14sp" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

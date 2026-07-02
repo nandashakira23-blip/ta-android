@@ -437,15 +437,12 @@ class ClockInActivity : AppCompatActivity() {
             return
         }
         
-        val similarityPercent = (currentSimilarity * 100).toInt()
-        val thresholdPercent = (SIMILARITY_THRESHOLD * 100).toInt()
-        
         val statusText = if (currentSimilarity >= SIMILARITY_THRESHOLD) {
-            "Match! $similarityPercent%"
+            "Wajah cocok"
         } else if (currentSimilarity > 0) {
-            "Matching... $similarityPercent% (need $thresholdPercent%)"
+            "Mencocokkan wajah..."
         } else {
-            "Detecting face..."
+            "Mendeteksi wajah..."
         }
         
         val color = when {
@@ -496,95 +493,88 @@ class ClockInActivity : AppCompatActivity() {
             return
         }
         
-        // Take photo first
-        takePhotoForClockIn { photoFile ->
-            uploadClockIn(photoFile, location)
+        // Capture multiple frames; the server matches all and keeps the best (multi-frame).
+        captureFramesForClockIn { photoFiles ->
+            uploadClockIn(photoFiles, location)
         }
     }
-    
-    private fun takePhotoForClockIn(onPhotoTaken: (File) -> Unit) {
-        val imageCapture = imageCapture ?: return
-        
+
+    private fun captureFramesForClockIn(onPhotosTaken: (List<File>) -> Unit) {
+        captureFrame(mutableListOf(), 3, onPhotosTaken)
+    }
+
+    // Capture frames sequentially; each takePicture gives a slightly different moment.
+    private fun captureFrame(frames: MutableList<File>, target: Int, onDone: (List<File>) -> Unit) {
+        val imageCapture = imageCapture ?: run {
+            if (frames.isNotEmpty()) onDone(frames) else showError("Kamera belum siap")
+            return
+        }
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
-        val photoFile = File(getExternalFilesDir(null), "$name.jpg")
-        
+        val photoFile = File(getExternalFilesDir(null), "${name}_${frames.size}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        
+
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
                     Log.e("ClockIn", "Photo capture failed: ${exception.message}", exception)
-                    showError("Gagal mengambil foto: ${exception.message}")
+                    if (frames.isNotEmpty()) onDone(frames)
+                    else showError("Gagal mengambil foto: ${exception.message}")
                 }
-                
+
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    Log.d("ClockIn", "Photo capture succeeded")
-                    onPhotoTaken(photoFile)
+                    frames.add(photoFile)
+                    if (frames.size >= target) {
+                        Log.d("ClockIn", "Captured ${frames.size} frame(s)")
+                        onDone(frames)
+                    } else {
+                        captureFrame(frames, target, onDone)
+                    }
                 }
             }
         )
     }
     
-    private fun uploadClockIn(photoFile: File, location: Location) {
+    private fun uploadClockIn(photoFiles: List<File>, location: Location) {
         showLoading(true)
-        
+
+        fun cleanupFrames() {
+            photoFiles.forEach { f ->
+                try { if (f.exists()) f.delete() } catch (e: Exception) { Log.e("ClockIn", "Error deleting frame", e) }
+            }
+        }
+
         try {
-            Log.d("ClockIn", "Starting clock in upload")
-            Log.d("ClockIn", "Photo file: ${photoFile.absolutePath}, exists: ${photoFile.exists()}, size: ${photoFile.length()}")
+            Log.d("ClockIn", "Starting clock in upload with ${photoFiles.size} frame(s)")
             Log.d("ClockIn", "Location: lat=${location.latitude}, lng=${location.longitude}")
-            
+
             val apiAdapter = com.fleur.attendance.data.api.LegacyApiAdapter(this)
-            
-            apiAdapter.clockIn(location.latitude, location.longitude, photoFile,
+
+            apiAdapter.clockIn(location.latitude, location.longitude, photoFiles,
                 onSuccess = { response ->
                     showLoading(false)
                     Log.d("ClockIn", "Clock in success: ${response.message}")
-                    
+
                     if (response.success && response.data != null) {
                         showClockInSuccess(response.data)
                     } else {
                         showError(response.message)
                     }
-                    
-                    // Clean up photo file
-                    try {
-                        if (photoFile.exists()) {
-                            photoFile.delete()
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ClockIn", "Error deleting photo file", e)
-                    }
+                    cleanupFrames()
                 },
                 onError = { error ->
                     showLoading(false)
                     Log.e("ClockIn", "Clock in error: $error")
                     showError(error)
-                    
-                    // Clean up photo file
-                    try {
-                        if (photoFile.exists()) {
-                            photoFile.delete()
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ClockIn", "Error deleting photo file", e)
-                    }
+                    cleanupFrames()
                 }
             )
         } catch (e: Exception) {
             showLoading(false)
             Log.e("ClockIn", "Exception in uploadClockIn", e)
             showError("Error: ${e.message}")
-            
-            // Clean up photo file
-            try {
-                if (photoFile.exists()) {
-                    photoFile.delete()
-                }
-            } catch (ex: Exception) {
-                Log.e("ClockIn", "Error deleting photo file", ex)
-            }
+            cleanupFrames()
         }
     }
     
@@ -598,9 +588,6 @@ class ClockInActivity : AppCompatActivity() {
                 append("Distance: ${result.location.distance.toInt()}m")
                 append("\n")
                 append("Face Match: ${if (result.faceMatch.isMatch) "Ya" else "Tidak"}")
-                if (result.faceMatch.isMatch) {
-                    append(" (${(result.faceMatch.similarity * 100).toInt()}%)")
-                }
             }
             
             AlertDialog.Builder(this)

@@ -50,10 +50,18 @@ class ActivationActivity : AppCompatActivity() {
         binding.btnActivate.setOnClickListener {
             val nikInput = binding.etNikActivation.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
-            
+
             if (validateNik(nikInput) && validateEmail(email)) {
                 validateNikAndContinue(nikInput, email)
             }
+        }
+
+        // "Sudah punya akun? Login" -> go to the Login screen
+        binding.tvHaveAccount.setOnClickListener {
+            val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
     }
 

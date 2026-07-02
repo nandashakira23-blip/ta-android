@@ -19,7 +19,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"https://api-presensi.vercel.app/\"")
+            // Local backend over LAN for on-device testing (PC Wi-Fi IP)
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.7:3000/\"")
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }

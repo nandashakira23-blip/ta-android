@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1a1d20">
+    android:background="@color/dark_background">
 
     <!-- Logo -->
     <ImageView
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:text="FLEUR CAFÉ"
         android:textSize="32sp"
-        android:textColor="#e4d5c7"
+        android:textColor="@color/brown_200"
         android:fontFamily="sans-serif-light"
         android:letterSpacing="0.15"
         app:layout_constraintTop_toBottomOf="@id/ivLogo"
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:text="Atelier d'artistes"
         android:textSize="16sp"
-        android:textColor="#a67c52"
+        android:textColor="@color/primary_brown"
         android:fontFamily="serif"
         android:textStyle="italic"
         app:layout_constraintTop_toBottomOf="@id/tvAppName"
@@ -59,7 +59,7 @@
         android:layout_height="wrap_content"
         android:text="PRESENSI"
         android:textSize="12sp"
-        android:textColor="#6c757d"
+        android:textColor="@color/text_muted"
         android:fontFamily="sans-serif-light"
         android:letterSpacing="0.2"
         android:layout_marginBottom="48dp"

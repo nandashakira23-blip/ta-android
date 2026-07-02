@@ -7,6 +7,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.fleur.attendance.databinding.ActivitySplashBinding
+import com.fleur.attendance.ui.auth.CekStatusActivity
 import com.fleur.attendance.ui.auth.LoginActivity
 import com.fleur.attendance.ui.main.MainActivity
 import com.fleur.attendance.utils.SessionManager
@@ -56,9 +57,9 @@ class SplashActivity : AppCompatActivity() {
                 Log.d("SplashActivity", "Going to MainActivity")
                 navigateToMain()
             } else {
-                // User not logged in, go to LoginActivity
-                Log.d("SplashActivity", "Going to LoginActivity")
-                navigateToLogin()
+                // Not logged in -> show the activation-status check screen (routes to Login/Activation)
+                Log.d("SplashActivity", "Going to CekStatusActivity")
+                navigateToCekStatus()
             }
             
         } catch (e: Exception) {
@@ -90,6 +91,18 @@ class SplashActivity : AppCompatActivity() {
             Log.e("SplashActivity", "Error navigating to LoginActivity", e)
             // Last resort - just finish
             finish()
+        }
+    }
+
+    private fun navigateToCekStatus() {
+        try {
+            val intent = Intent(this, CekStatusActivity::class.java)
+            startActivity(intent)
+            finish()
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        } catch (e: Exception) {
+            Log.e("SplashActivity", "Error navigating to CekStatusActivity", e)
+            navigateToLogin()
         }
     }
     

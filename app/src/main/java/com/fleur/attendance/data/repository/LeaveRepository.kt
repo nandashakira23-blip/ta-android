@@ -3,9 +3,11 @@ package com.fleur.attendance.data.repository
 import android.content.Context
 import com.fleur.attendance.data.api.ApiConfig
 import com.fleur.attendance.data.api.ApiService
+import com.fleur.attendance.data.model.ApiResponse
 import com.fleur.attendance.data.model.LeaveRequestPayload
 import com.fleur.attendance.data.model.LeaveRequestResponse
 import com.fleur.attendance.data.model.LeaveRequestsResponse
+import com.fleur.attendance.data.model.ReplacementCandidatesResponse
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -31,11 +33,56 @@ class LeaveRepository(private val context: Context) {
                 if (response.isSuccessful) {
                     response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
                 } else {
-                    onError("Gagal mengambil riwayat izin")
+                    onError("Gagal mengambil riwayat Absensi")
                 }
             }
 
             override fun onFailure(call: Call<LeaveRequestsResponse>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun getReplacementRequests(
+        onSuccess: (LeaveRequestsResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.getReplacementRequests().enqueue(object : Callback<LeaveRequestsResponse> {
+            override fun onResponse(
+                call: Call<LeaveRequestsResponse>,
+                response: Response<LeaveRequestsResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    onError("Gagal mengambil daftar approval pengganti")
+                }
+            }
+
+            override fun onFailure(call: Call<LeaveRequestsResponse>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun getReplacementCandidates(
+        query: String? = null,
+        onSuccess: (ReplacementCandidatesResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.getReplacementCandidates(query).enqueue(object : Callback<ReplacementCandidatesResponse> {
+            override fun onResponse(
+                call: Call<ReplacementCandidatesResponse>,
+                response: Response<ReplacementCandidatesResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    onError("Gagal mengambil daftar karyawan pengganti")
+                }
+            }
+
+            override fun onFailure(call: Call<ReplacementCandidatesResponse>, t: Throwable) {
                 onError(t.message ?: "Kesalahan jaringan")
             }
         })
@@ -70,6 +117,7 @@ class LeaveRepository(private val context: Context) {
             tanggalSelesai = payload.tanggalSelesai.toRequestBody("text/plain".toMediaTypeOrNull()),
             jamMulai = payload.jamMulai?.toRequestBody("text/plain".toMediaTypeOrNull()),
             jamSelesai = payload.jamSelesai?.toRequestBody("text/plain".toMediaTypeOrNull()),
+            idPengganti = payload.idPengganti?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
             alasan = payload.alasan.toRequestBody("text/plain".toMediaTypeOrNull()),
             lampiran = attachmentPart
         ).enqueue(object : Callback<LeaveRequestResponse> {
@@ -80,11 +128,82 @@ class LeaveRepository(private val context: Context) {
                 if (response.isSuccessful) {
                     response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
                 } else {
-                    onError("Gagal mengirim pengajuan izin")
+                    onError("Gagal mengirim pengajuan Absensi")
                 }
             }
 
             override fun onFailure(call: Call<LeaveRequestResponse>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun approveReplacementRequest(
+        requestId: Int,
+        note: String? = null,
+        onSuccess: (ApiResponse<Any>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.approveReplacementRequest(requestId, note).enqueue(object : Callback<ApiResponse<Any>> {
+            override fun onResponse(
+                call: Call<ApiResponse<Any>>,
+                response: Response<ApiResponse<Any>>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    onError("Gagal menyetujui permintaan pengganti")
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun rejectReplacementRequest(
+        requestId: Int,
+        note: String? = null,
+        onSuccess: (ApiResponse<Any>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.rejectReplacementRequest(requestId, note).enqueue(object : Callback<ApiResponse<Any>> {
+            override fun onResponse(
+                call: Call<ApiResponse<Any>>,
+                response: Response<ApiResponse<Any>>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    onError("Gagal menolak permintaan pengganti")
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun cancelLeaveRequest(
+        requestId: Int,
+        onSuccess: (ApiResponse<Any>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.cancelLeaveRequest(requestId).enqueue(object : Callback<ApiResponse<Any>> {
+            override fun onResponse(
+                call: Call<ApiResponse<Any>>,
+                response: Response<ApiResponse<Any>>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    onError("Gagal membatalkan pengajuan")
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
                 onError(t.message ?: "Kesalahan jaringan")
             }
         })

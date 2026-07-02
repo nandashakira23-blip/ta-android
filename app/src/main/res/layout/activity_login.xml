@@ -38,7 +38,7 @@
             android:layout_marginTop="24dp"
             android:text="FLEUR CAFÉ"
             android:textSize="32sp"
-            android:textColor="#e4d5c7"
+            android:textColor="@color/brown_200"
             android:fontFamily="sans-serif-light"
             android:letterSpacing="0.15" />
 
@@ -48,7 +48,7 @@
             android:layout_marginTop="8dp"
             android:text="Atelier d'artistes"
             android:textSize="16sp"
-            android:textColor="#a67c52"
+            android:textColor="@color/primary_brown"
             android:fontFamily="serif"
             android:textStyle="italic" />
 
@@ -110,7 +110,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="numberPassword"
-                android:maxLength="4"
+                android:maxLength="6"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_tertiary" />
 
@@ -146,7 +146,7 @@
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#80000000"
+        android:background="@color/loading_overlay"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">

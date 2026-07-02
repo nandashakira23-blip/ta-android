@@ -7,6 +7,8 @@ import com.fleur.attendance.data.model.Employee
 
 class SessionManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+    // Device-level flags that must survive logout (clearSession only clears "user_session").
+    private val appPrefs: SharedPreferences = context.getSharedPreferences("app_state", Context.MODE_PRIVATE)
     private val tokenManager: TokenManager = TokenManager.getInstance(context)
     
     companion object {
@@ -112,5 +114,16 @@ class SessionManager(context: Context) {
     
     fun clearSavedNik() {
         prefs.edit().remove(KEY_SAVED_NIK).apply()
+    }
+
+    // Device-level flag: has this device ever completed activation/login?
+    // Decides the first screen after splash (Activation for a brand-new device, Login otherwise).
+    // Stored in a separate prefs file so it persists across logout (clearSession()).
+    fun setEverActivated() {
+        appPrefs.edit().putBoolean("ever_activated", true).apply()
+    }
+
+    fun hasEverActivated(): Boolean {
+        return appPrefs.getBoolean("ever_activated", false)
     }
 }

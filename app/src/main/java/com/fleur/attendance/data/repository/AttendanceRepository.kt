@@ -51,16 +51,19 @@ class AttendanceRepository(private val context: Context) {
                     }
                     "NO_FACE_REFERENCE" -> "Foto referensi wajah belum terdaftar. Silakan aktivasi akun terlebih dahulu"
                     "NO_FACES_DETECTED" -> "Wajah tidak terdeteksi pada foto. Pastikan wajah terlihat jelas"
-                    "FACE_NO_MATCH" -> {
-                        val data = jsonObject.optJSONObject("data")
-                        val similarity = ((data?.optDouble("similarity", 0.0) ?: 0.0) * 100).toInt()
-                        "Wajah tidak cocok dengan data referensi (kemiripan: $similarity%)"
-                    }
+                    "FACE_NO_MATCH" -> "Wajah tidak cocok dengan data referensi"
                     "OUTSIDE_CHECKIN_WINDOW" -> "Check-in hanya bisa dilakukan pada jam yang telah ditentukan"
                     "OUTSIDE_CHECKOUT_WINDOW" -> "Check-out hanya bisa dilakukan pada jam yang telah ditentukan"
                     "ALREADY_CHECKED_IN" -> "Anda sudah melakukan check-in hari ini"
                     "ALREADY_CHECKED_OUT" -> "Anda sudah melakukan check-out hari ini"
                     "NO_CHECK_IN" -> "Anda harus check-in terlebih dahulu sebelum check-out"
+                    "BREAK_ALREADY_STARTED" -> "Istirahat masih berlangsung"
+                    "NO_ACTIVE_BREAK" -> "Tidak ada istirahat yang sedang berlangsung"
+                    "BREAK_LOCATION_INVALID" -> {
+                        val data = jsonObject.optJSONObject("data")
+                        val distance = data?.optDouble("distance", 0.0)?.toInt() ?: 0
+                        "Anda belum berada di area kantor (${distance}m dari kantor)"
+                    }
                     "UNAUTHORIZED" -> "Sesi telah berakhir. Silakan login kembali"
                     "TOKEN_EXPIRED" -> "Sesi telah berakhir. Silakan login kembali"
                     else -> if (message.isNotEmpty()) message else defaultMessage
@@ -80,21 +83,23 @@ class AttendanceRepository(private val context: Context) {
     fun clockIn(
         latitude: Double,
         longitude: Double,
-        facePhotoFile: File,
+        facePhotoFiles: List<File>,
         onSuccess: (ClockInResponse) -> Unit,
         onError: (String) -> Unit
     ) {
         val latBody = latitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
         val lngBody = longitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-        
-        val photoBody = facePhotoFile.asRequestBody("image/*".toMediaTypeOrNull())
-        val photoPart = MultipartBody.Part.createFormData(
-            "photo",
-            facePhotoFile.name,
-            photoBody
-        )
-        
-        apiService.clockIn(latBody, lngBody, photoPart)
+
+        // Multi-frame: send every captured frame under the "photo" field; the server picks the best match.
+        val photoParts = facePhotoFiles.map { file ->
+            MultipartBody.Part.createFormData(
+                "photo",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+        }
+
+        apiService.clockIn(latBody, lngBody, photoParts)
             .enqueue(object : Callback<ClockInResponse> {
                 override fun onResponse(
                     call: Call<ClockInResponse>,
@@ -131,21 +136,23 @@ class AttendanceRepository(private val context: Context) {
     fun clockOut(
         latitude: Double,
         longitude: Double,
-        facePhotoFile: File,
+        facePhotoFiles: List<File>,
         onSuccess: (ClockOutResponse) -> Unit,
         onError: (String) -> Unit
     ) {
         val latBody = latitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
         val lngBody = longitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-        
-        val photoBody = facePhotoFile.asRequestBody("image/*".toMediaTypeOrNull())
-        val photoPart = MultipartBody.Part.createFormData(
-            "photo",
-            facePhotoFile.name,
-            photoBody
-        )
-        
-        apiService.clockOut(latBody, lngBody, photoPart)
+
+        // Multi-frame: send every captured frame under the "photo" field; the server picks the best match.
+        val photoParts = facePhotoFiles.map { file ->
+            MultipartBody.Part.createFormData(
+                "photo",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+        }
+
+        apiService.clockOut(latBody, lngBody, photoParts)
             .enqueue(object : Callback<ClockOutResponse> {
                 override fun onResponse(
                     call: Call<ClockOutResponse>,
@@ -276,6 +283,73 @@ class AttendanceRepository(private val context: Context) {
                     onError(t.message ?: "Kesalahan jaringan")
                 }
             })
+    }
+
+    fun startBreak(
+        onSuccess: (BreakActionResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.startBreak().enqueue(object : Callback<BreakActionResponse> {
+            override fun onResponse(
+                call: Call<BreakActionResponse>,
+                response: Response<BreakActionResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    val errorMessage = parseErrorMessage(
+                        response.errorBody(),
+                        "Gagal memulai istirahat"
+                    )
+                    onError(errorMessage)
+                }
+            }
+
+            override fun onFailure(call: Call<BreakActionResponse>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun endBreak(
+        latitude: Double,
+        longitude: Double,
+        facePhotoFiles: List<File>,
+        onSuccess: (BreakActionResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val latBody = latitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+        val lngBody = longitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+
+        // Multi-frame: send every captured frame under the "photo" field; the server picks the best match.
+        val photoParts = facePhotoFiles.map { file ->
+            MultipartBody.Part.createFormData(
+                "photo",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+        }
+
+        apiService.endBreak(latBody, lngBody, photoParts).enqueue(object : Callback<BreakActionResponse> {
+            override fun onResponse(
+                call: Call<BreakActionResponse>,
+                response: Response<BreakActionResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
+                } else {
+                    val errorMessage = parseErrorMessage(
+                        response.errorBody(),
+                        "Gagal menyelesaikan istirahat"
+                    )
+                    onError(errorMessage)
+                }
+            }
+
+            override fun onFailure(call: Call<BreakActionResponse>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
     }
     
     /**

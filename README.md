@@ -1,182 +1,68 @@
-# Fleur Atelier d'artistes - Presensi System (Android)
+# Fleur Atelier - Android Presensi
 
-## 📱 Overview
+## Sumber Acuan Aktual
 
-Aplikasi Android untuk Sistem Presensi Fleur Atelier d'artistes dengan fitur Face Recognition, Location-Based Services, dan Work Schedule Management.
+- Backend utama: `app.js`, `routes/admin.js`, `routes/api.js`, `swagger.js`.
+- Database aktual: `migrations/database.js` dan migrasi runtime di `app.js`.
+- Android aktual: `Android App/app/src/main/java/com/fleur/attendance/data/api/ApiService.kt` dan model di folder `data/model`.
+- Web admin/manager aktual: `views/admin/*` dan `views/partials/sidebar.ejs`.
 
-## 🎨 Features
+Dokumen ini diperbarui pada 2026-05-07 agar mengikuti sistem yang sedang berjalan, bukan rancangan lama.
 
-### ✅ Implemented
-- **Splash Screen** - Loading animation dengan brown theme
-- **Authentication System** - NIK + PIN login dengan email OTP verification
-- **Account Activation** - Setup PIN untuk user baru
-- **Face Enrollment** - Registrasi wajah dengan camera
-- **Main Dashboard** - Status presensi dan quick actions
-- **Clock In** - Presensi masuk dengan foto dan lokasi
-- **Clock Out** - Presensi keluar dengan work summary lengkap
-- **Attendance History** - Riwayat presensi dengan status lengkap
-- **Leave Request** - Pengajuan izin/sakit (full day, half day, hourly)
-- **Profile Screen** - Informasi karyawan dan statistik
-- **Settings Screen** - Change PIN, face re-enrollment
-- **Location Services** - Radius check dari kantor
-- **Session Management** - Persistent login dengan refresh token
-- **Work Summary** - Detail keterlambatan, lembur, pulang awal
-- **Status Tracking** - Present, Late, Absent, Leave, Sick, Holiday
+## Ringkasan
 
-## 🏗️ Architecture
+Aplikasi Android dipakai karyawan untuk aktivasi akun, login, presensi masuk, istirahat, presensi keluar, pengajuan Absensi cuti/izin/sakit, approval pengganti, riwayat presensi, profil, ganti PIN, dan enroll ulang wajah.
 
-```
-app/
-├── src/main/java/com/fleur/attendance/
-│   ├── data/
-│   │   ├── api/           # API configuration & service
-│   │   └── model/         # Data models & responses
-│   ├── ui/
-│   │   ├── splash/        # Splash screen
-│   │   ├── auth/          # Login, activation, face enrollment
-│   │   ├── main/          # Dashboard
-│   │   ├── attendance/    # Clock in/out, history
-│   │   ├── profile/       # User profile
-│   │   └── settings/      # App settings
-│   └── utils/             # Utilities & helpers
-└── src/main/res/
-    ├── layout/            # XML layouts
-    ├── drawable/          # Icons & graphics
-    ├── values/            # Colors, strings, styles
-    └── menu/              # Navigation menus
-```
+## Android App
 
-## 🎨 Design System
+- Aktivasi akun dengan NIK, PIN, email OTP, dan face enrollment.
+- Login memakai NIK dan PIN, lalu token JWT disimpan untuk request berikutnya.
+- Clock in dan clock out memakai foto, GPS, validasi radius, dan face matching.
+- Istirahat memakai endpoint start/end; detail sesi tersimpan di `presensi.data_istirahat`.
+- Pengajuan Absensi untuk `cuti`, `izin`, dan `sakit` mendukung `full_day`, `half_day`, dan `hourly`.
+- Jika ada `id_pengganti`, status awal menjadi `menunggu_pengganti`; setelah disetujui pengganti, status menjadi `menunggu_manager`.
+- Karyawan yang dipilih sebagai pengganti melihat daftar request di `/api/replacement-requests` dan dapat approve/reject.
+- Riwayat presensi menampilkan menit kerja, terlambat, pulang awal, lembur, istirahat, dan absensi yang disetujui.
 
-### Color Palette
-- **Primary Brown**: `#A67C52`
-- **Dark Background**: `#1A1D20`
-- **Dark Surface**: `#212529`
-- **Text Primary**: `#FFFFFF`
-- **Success Green**: `#10B981`
-- **Error Red**: `#EF4444`
+## Struktur Kode Penting
 
-### Typography
-- **Headers**: Sans-serif Medium, 24sp
-- **Body**: Sans-serif Regular, 14sp
-- **Buttons**: Sans-serif Medium, 16sp
+| Lokasi | Fungsi |
+| --- | --- |
+| `data/api/ApiService.kt` | Definisi endpoint Retrofit yang dipakai Android. |
+| `data/api/TokenManager.kt` | Inject token JWT dan refresh token. |
+| `data/repository/AttendanceRepository.kt` | Presensi masuk/keluar, istirahat, status, riwayat, ringkasan. |
+| `data/repository/LeaveRepository.kt` | Pengajuan Absensi dan approval pengganti. |
+| `ui/attendance/ClockInActivity.kt` | Presensi masuk. |
+| `ui/attendance/ClockOutActivity.kt` | Presensi keluar. |
+| `ui/attendance/LeaveRequestActivity.kt` | Form Absensi cuti/izin/sakit. |
+| `ui/attendance/AttendanceHistoryActivity.kt` | Riwayat presensi dan status. |
+| `utils/SessionManager.kt` | Penyimpanan data session karyawan di perangkat. |
 
-## 🔧 API Integration
+## Endpoint Aktual
 
-### Base URLs
-- **Development**: `http://192.168.1.102:3000/api/`
-- **Emulator**: `http://10.0.2.2:3000/api/`
-- **Production**: `https://api.fleuratelier.com/api/`
+| Area | Endpoint | Fungsi |
+| --- | --- | --- |
+| System | `GET /api/health` | Health check service dan database. |
+| Auth Android | `POST /api/auth/check-nik`, `/login`, `/activate`, `/refresh`, `/logout` | Validasi NIK, aktivasi, login PIN, refresh token, logout. |
+| Email | `POST /api/auth/request-email-otp`, `/verify-email-otp`, `/request-email-verification` | Verifikasi email karyawan. |
+| Face | `GET /api/employee/face-reference`, `/api/face/status`, `POST /api/face/re-enroll` | Referensi wajah dan enroll ulang. |
+| Presensi | `POST /api/attendance/checkin`, `/checkout`, `/validate-face` | Presensi masuk/keluar dengan lokasi, foto, dan face matching. |
+| Istirahat | `POST /api/attendance/break/start`, `/break/end` | Mulai dan selesai istirahat, disimpan ke `presensi.data_istirahat`. |
+| Riwayat Presensi | `GET /api/attendance/status/:id_karyawan`, `/today`, `/history`, `/summary` | Status hari ini, riwayat, dan ringkasan presensi. |
+| Absensi Android | `GET/POST /api/leave-requests` | Pengajuan dan daftar cuti/izin/sakit pada tabel `absensi`. |
+| Approval Pengganti | `GET /api/replacement-requests`, `POST /api/replacement-requests/:id/approve`, `/reject` | Karyawan pengganti approve/reject sebelum manager. |
+| Jadwal | `GET /api/schedule/today/:id_karyawan` | Jadwal kerja karyawan hari ini. |
+| Lokasi | `GET /api/settings/office-location`, `POST /api/validation/location` | Ambil dan validasi lokasi kantor. |
+| Admin Web | `/admin/*` | Dashboard, master data, laporan, pengaturan, akun manager, dan Manajemen Absensi. |
 
-### Key Endpoints
-- `POST /api/auth/check-nik` - Validasi NIK
-- `POST /api/auth/activate` - Aktivasi akun
-- `POST /api/auth/login` - Login dengan PIN
-- `POST /api/attendance/checkin` - Presensi masuk
-- `POST /api/attendance/checkout` - Presensi pulang
-- `GET /api/auth/profile/{id}` - Profil karyawan
-- `GET /api/attendance/today` - Presensi hari ini
-- `GET /api/attendance/history` - Riwayat presensi
+Dokumentasi Swagger berjalan di `/api-docs` dari `swagger.js` dan komentar OpenAPI di `routes/api.js`.
 
-## 📱 Screens Flow
+## Base URL
 
-```
-Splash → Login → Check NIK → Activation → Face Enrollment → Dashboard
-                     ↓
-                 Dashboard → Clock In/Out → Success
-                     ↓
-                 Bottom Nav → Attendance History / Profile
-```
+- Emulator Android: `http://10.0.2.2:3000/`.
+- Device fisik: gunakan IP komputer backend di jaringan yang sama.
+- Production: set URL API production di `ApiConfig.kt` sesuai deployment.
 
-## 🔒 Permissions
+## Catatan Istilah
 
-- `INTERNET` - API communication
-- `ACCESS_FINE_LOCATION` - GPS location
-- `CAMERA` - Photo capture
-- `WRITE_EXTERNAL_STORAGE` - Photo storage
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Android Studio Arctic Fox or later
-- Android SDK 24+ (Android 7.0)
-- Backend API server running
-
-### Setup
-1. Clone repository
-2. Open in Android Studio
-3. Sync Gradle dependencies
-4. Update API base URL in `ApiConfig.kt`
-5. Run on device or emulator
-
-### Build Variants
-- **Debug**: Development with logging
-- **Release**: Production optimized
-
-## 📦 Dependencies
-
-### Core
-- **Material Components** - UI components
-- **ConstraintLayout** - Flexible layouts
-- **CardView** - Card UI elements
-
-### Networking
-- **Retrofit** - HTTP client
-- **OkHttp** - Network interceptor
-- **Gson** - JSON parsing
-
-### Camera & Location
-- **CameraX** - Camera functionality
-- **Play Services Location** - GPS services
-- **ML Kit** - Face detection (planned)
-
-### Utilities
-- **Glide** - Image loading
-- **Dexter** - Permission handling
-
-## 🧪 Testing
-
-### Manual Testing
-1. Install APK on device
-2. Test login flow with valid NIK
-3. Complete face enrollment
-4. Test clock in with location
-5. Verify API responses
-
-### Test Accounts
-- NIK: `1234567890123456`
-- PIN: `1234` (after activation)
-
-## 📊 Enhanced Features
-
-### Work Summary Tracking
-- **Late Minutes** - Tracking keterlambatan dengan detail menit
-- **Early Leave Minutes** - Tracking pulang lebih awal
-- **Overtime Minutes** - Tracking lembur
-- **Effective Work Minutes** - Jam kerja efektif setelah dikurangi izin
-- **Approved Leave Minutes** - Izin yang disetujui
-
-### Status Management
-- **6 Status Types** - Present, Late, Absent, Leave, Sick, Holiday
-- **Color Coding** - Setiap status punya warna berbeda
-- **Smart Badges** - Status badge dengan info tambahan (misal: "Terlambat (15 menit)")
-- **Helper Functions** - Format otomatis untuk display
-
-## 🐛 Known Issues
-
-1. **Location Permission** - May need manual grant on some devices
-2. **Camera Preview** - Rotation handling needs improvement
-
-## 📞 Support
-
-- **Backend API**: Ready dan tested
-- **Development Guide**: `ANDROID_DEVELOPMENT_GUIDE.md`
-- **API Documentation**: `http://localhost:3000/api-docs`
-
-## 📄 License
-
-© 2026 Fleur Atelier d'artistes - Internal Use Only
-
----
-
-**Happy Coding! 🚀📱**
+Nama class Android masih menggunakan `Leave*` pada beberapa file agar kompatibel dengan implementasi sebelumnya. Secara bisnis dan database, fitur tersebut adalah `Absensi` dan tersimpan pada tabel `absensi`.

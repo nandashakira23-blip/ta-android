@@ -98,7 +98,7 @@ data class Employee(
     val fotoReferensi: String?,
     @SerializedName("face_enrollment_completed")
     val faceEnrollmentCompleted: Boolean,
-    @SerializedName("work_schedule_id")
+    @SerializedName("id_jadwal_kerja")
     val workScheduleId: Int?,
     @SerializedName("email_verified")
     val emailVerified: Boolean = false,
@@ -156,6 +156,10 @@ data class ClockOutData(
     val workDuration: String,
     @SerializedName("approvedLeaveMinutes")
     val approvedLeaveMinutes: Int? = null,
+    @SerializedName("breakMinutes")
+    val breakMinutes: Int? = null,
+    @SerializedName("actualBreakMinutes")
+    val actualBreakMinutes: Int? = null,
     @SerializedName("effectiveWorkMinutes")
     val effectiveWorkMinutes: Int? = null,
     @SerializedName("overtimeMinutes")
@@ -166,7 +170,9 @@ data class ClockOutData(
     val earlyLeaveMinutes: Int? = null,
     val location: LocationValidation,
     @SerializedName("faceMatch")
-    val faceMatch: FaceMatchResult
+    val faceMatch: FaceMatchResult,
+    @SerializedName("break")
+    val breakInfo: BreakInfo? = null
 )
 
 data class LocationValidation(
@@ -202,6 +208,8 @@ data class AttendanceStatus(
     val checkOut: AttendanceRecord?,
     @SerializedName("workDuration")
     val workDuration: String?,
+    @SerializedName("break")
+    val breakInfo: BreakInfo? = null,
     @SerializedName("canCheckIn")
     val canCheckIn: Boolean,
     @SerializedName("canCheckOut")
@@ -210,6 +218,60 @@ data class AttendanceStatus(
     val nextAction: String,
     @SerializedName("workSchedule")
     val workSchedule: WorkScheduleInfo?
+)
+
+data class BreakActionResponse(
+    val success: Boolean,
+    val message: String,
+    val data: BreakInfo? = null,
+    val code: String? = null
+)
+
+data class BreakInfo(
+    val status: String? = null,
+    @SerializedName("total_menit")
+    val totalMenit: Int = 0,
+    @SerializedName("durasi_aktif_menit")
+    val activeDurationMinutes: Int = 0,
+    @SerializedName("total_berjalan_menit")
+    val runningTotalMinutes: Int = 0,
+    @SerializedName("durasi_istirahat_menit")
+    val breakAllowanceMinutes: Int = 60,
+    @SerializedName("dihitung_menit")
+    val countedBreakMinutes: Int = 0,
+    @SerializedName("sisa_istirahat_menit")
+    val remainingBreakMinutes: Int = 60,
+    @SerializedName("kelebihan_istirahat_menit")
+    val breakOverageMinutes: Int = 0,
+    @SerializedName("sesi")
+    val sessions: List<BreakSession> = emptyList(),
+    @SerializedName("sedang_istirahat")
+    val isOnBreak: Boolean = false,
+    @SerializedName("mulai_aktif")
+    val activeStartedAt: String? = null,
+    val canStartBreak: Boolean = false,
+    val canEndBreak: Boolean = false
+)
+
+data class BreakSession(
+    val mulai: String? = null,
+    val selesai: String? = null,
+    @SerializedName("durasi_menit")
+    val durationMinutes: Int = 0,
+    @SerializedName("lokasi_selesai")
+    val endLocation: BreakEndLocation? = null,
+    @SerializedName("auto_closed")
+    val autoClosed: Boolean = false,
+    @SerializedName("auto_closed_reason")
+    val autoClosedReason: String? = null
+)
+
+data class BreakEndLocation(
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    @SerializedName("jarak_meter")
+    val distanceMeters: Double? = null,
+    val valid: Boolean = false
 )
 
 data class WorkScheduleInfo(
@@ -249,6 +311,8 @@ data class TodayAttendanceData(
     val checkOut: AttendanceRecord?,
     @SerializedName(value = "workDuration", alternate = ["work_duration"])
     val workDuration: String?,
+    @SerializedName("break")
+    val breakInfo: BreakInfo? = null,
     @SerializedName("canCheckIn")
     val canCheckIn: Boolean,
     @SerializedName("canCheckOut")
@@ -298,6 +362,10 @@ data class AttendanceHistoryItem(
     val lateMinutes: Int? = null,
     @SerializedName("early_leave_minutes")
     val earlyLeaveMinutes: Int? = null,
+    @SerializedName("break_minutes")
+    val breakMinutes: Int? = null,
+    @SerializedName("data_istirahat")
+    val breakInfo: BreakInfo? = null,
     @SerializedName("leave_request_id")
     val leaveRequestId: Int? = null,
     val keterangan: String? = null
@@ -370,6 +438,10 @@ data class DailyAttendanceRecord(
     val lateMinutes: Int? = null,
     @SerializedName("early_leave_minutes")
     val earlyLeaveMinutes: Int? = null,
+    @SerializedName("break_minutes")
+    val breakMinutes: Int? = null,
+    @SerializedName("data_istirahat")
+    val breakInfo: BreakInfo? = null,
     @SerializedName("leave_request_id")
     val leaveRequestId: Int? = null
 )
@@ -679,8 +751,27 @@ data class LeaveRequestsResponse(
     val data: List<LeaveRequestItem> = emptyList()
 )
 
+data class ReplacementCandidatesResponse(
+    val success: Boolean,
+    val message: String,
+    val data: List<ReplacementCandidate> = emptyList()
+)
+
+data class ReplacementCandidate(
+    val id: Int,
+    val nik: String,
+    val nama: String,
+    @SerializedName("nama_jabatan")
+    val namaJabatan: String? = null
+)
+
 data class LeaveRequestItem(
     val id: Int,
+    @SerializedName("id_karyawan")
+    val idKaryawan: Int? = null,
+    @SerializedName("nama_karyawan")
+    val namaKaryawan: String? = null,
+    val nik: String? = null,
     val jenis: String,
     @SerializedName("tanggal_mulai")
     val tanggalMulai: String,
@@ -694,6 +785,14 @@ data class LeaveRequestItem(
     val durasiMenit: Int? = null,
     val alasan: String,
     val lampiran: String? = null,
+    @SerializedName("id_pengganti")
+    val idPengganti: Int? = null,
+    @SerializedName("nama_pengganti")
+    val namaPengganti: String? = null,
+    @SerializedName("catatan_pengganti")
+    val catatanPengganti: String? = null,
+    @SerializedName("approved_pengganti_at")
+    val approvedPenggantiAt: String? = null,
     val status: String,
     @SerializedName("created_at")
     val createdAt: String? = null

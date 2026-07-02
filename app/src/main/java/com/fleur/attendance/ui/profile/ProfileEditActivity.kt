@@ -211,7 +211,11 @@ class ProfileEditActivity : AppCompatActivity() {
                 
                 if (!employee.profilePicture.isNullOrEmpty()) {
                     val baseUrl = apiAdapter.getBaseUrl().removeSuffix("/api/")
-                    val imageUrl = "$baseUrl/${employee.profilePicture}"
+                    val imageUrl = if (employee.profilePicture.startsWith("http://") || employee.profilePicture.startsWith("https://")) {
+                        employee.profilePicture
+                    } else {
+                        "$baseUrl/${employee.profilePicture.removePrefix("/")}"
+                    }
                     Log.d("ProfileEdit", "Loading image from: $imageUrl")
                     
                     Glide.with(this)

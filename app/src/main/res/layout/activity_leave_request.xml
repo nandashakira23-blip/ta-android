@@ -3,17 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1D20"
+    android:background="@color/dark_background"
     android:orientation="vertical">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLeaveMode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#212529"
-        app:tabIndicatorColor="#A67C52"
-        app:tabSelectedTextColor="#FFFFFF"
-        app:tabTextColor="#C4A882" />
+        android:background="@color/dark_surface"
+        app:tabIndicatorColor="@color/primary_brown"
+        app:tabSelectedTextColor="@color/text_primary"
+        app:tabTextColor="@color/brown_400" />
 
     <LinearLayout
         android:id="@+id/layoutFormTab"
@@ -35,7 +35,7 @@
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="#212529"
+                    app:cardBackgroundColor="@color/dark_surface"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="2dp">
 
@@ -48,8 +48,8 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Pengajuan Izin &amp; Sakit"
-                            android:textColor="#FFFFFF"
+                            android:text="Pengajuan Absensi"
+                            android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold" />
 
@@ -57,8 +57,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Pilih tanggal dari picker. Untuk sakit, lampiran surat wajib."
-                            android:textColor="#C4A882"
+                            android:text="Ajukan cuti, izin, atau sakit. Isi pengganti jika tugas perlu dialihkan."
+                            android:textColor="@color/brown_400"
                             android:textSize="12sp" />
 
                         <RadioGroup
@@ -69,13 +69,21 @@
                             android:orientation="horizontal">
 
                             <RadioButton
+                                android:id="@+id/rbCuti"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Cuti"
+                                android:textColor="@color/text_primary" />
+
+                            <RadioButton
                                 android:id="@+id/rbIzin"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:checked="true"
                                 android:text="Izin"
-                                android:textColor="#FFFFFF" />
+                                android:textColor="@color/text_primary" />
 
                             <RadioButton
                                 android:id="@+id/rbSakit"
@@ -83,7 +91,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Sakit"
-                                android:textColor="#FFFFFF" />
+                                android:textColor="@color/text_primary" />
                         </RadioGroup>
 
                         <EditText
@@ -91,26 +99,26 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:background="#2D3748"
+                            android:background="@color/dark_surface_variant"
                             android:clickable="true"
                             android:focusable="false"
                             android:hint="Tanggal mulai"
                             android:padding="12dp"
-                            android:textColor="#FFFFFF"
-                            android:textColorHint="#9CA3AF" />
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_muted" />
 
                         <EditText
                             android:id="@+id/etTanggalSelesai"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:background="#2D3748"
+                            android:background="@color/dark_surface_variant"
                             android:clickable="true"
                             android:focusable="false"
                             android:hint="Tanggal selesai"
                             android:padding="12dp"
-                            android:textColor="#FFFFFF"
-                            android:textColorHint="#9CA3AF" />
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_muted" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -123,13 +131,13 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:background="#2D3748"
+                                android:background="@color/dark_surface_variant"
                                 android:clickable="true"
                                 android:focusable="false"
                                 android:hint="Jam mulai"
                                 android:padding="12dp"
-                                android:textColor="#FFFFFF"
-                                android:textColorHint="#9CA3AF" />
+                                android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_muted" />
 
                             <View
                                 android:layout_width="10dp"
@@ -140,13 +148,49 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:background="#2D3748"
+                                android:background="@color/dark_surface_variant"
                                 android:clickable="true"
                                 android:focusable="false"
                                 android:hint="Jam selesai"
                                 android:padding="12dp"
-                                android:textColor="#FFFFFF"
-                                android:textColorHint="#9CA3AF" />
+                                android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_muted" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/actvPengganti"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="@color/dark_surface_variant"
+                                android:completionThreshold="0"
+                                android:dropDownHeight="240dp"
+                                android:dropDownVerticalOffset="4dp"
+                                android:hint="Cari karyawan pengganti (opsional)"
+                                android:inputType="text"
+                                android:padding="12dp"
+                                android:singleLine="true"
+                                android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_muted" />
+
+                            <TextView
+                                android:id="@+id/btnClearPengganti"
+                                android:layout_width="44dp"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="8dp"
+                                android:background="@color/leave_status_cancelled"
+                                android:gravity="center"
+                                android:text="X"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
                         </LinearLayout>
 
                         <EditText
@@ -154,23 +198,23 @@
                             android:layout_width="match_parent"
                             android:layout_height="120dp"
                             android:layout_marginTop="10dp"
-                            android:background="#2D3748"
+                            android:background="@color/dark_surface_variant"
                             android:gravity="top|start"
                             android:hint="Alasan pengajuan"
                             android:inputType="textMultiLine"
                             android:padding="12dp"
-                            android:textColor="#FFFFFF"
-                            android:textColorHint="#9CA3AF" />
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_muted" />
 
                         <Button
                             android:id="@+id/btnPickAttachment"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:backgroundTint="#374151"
-                            android:text="Pilih Lampiran (izin opsional)"
+                            android:backgroundTint="@color/leave_status_cancelled"
+                            android:text="Pilih Lampiran (sakit wajib)"
                             android:textAllCaps="false"
-                            android:textColor="#FFFFFF" />
+                            android:textColor="@color/text_primary" />
 
                         <TextView
                             android:id="@+id/tvAttachmentName"
@@ -178,7 +222,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:text="Belum ada lampiran"
-                            android:textColor="#C4A882"
+                            android:textColor="@color/brown_400"
                             android:textSize="12sp" />
 
                         <Button
@@ -186,10 +230,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:backgroundTint="#A67C52"
+                            android:backgroundTint="@color/primary_brown"
                             android:text="Kirim Pengajuan"
                             android:textAllCaps="false"
-                            android:textColor="#FFFFFF" />
+                            android:textColor="@color/text_primary" />
 
                         <ProgressBar
                             android:id="@+id/progressLeave"
@@ -216,8 +260,8 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Riwayat Pengajuan"
-            android:textColor="#FFFFFF"
+            android:text="Riwayat Absensi"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -227,7 +271,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Memuat data..."
-            android:textColor="#C4A882"
+            android:textColor="@color/brown_400"
             android:textSize="14sp" />
 
         <ListView
@@ -236,6 +280,43 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_marginTop="10dp"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="10dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutReplacementTab"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Approval Pengganti"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvEmptyReplacement"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Memuat data..."
+            android:textColor="@color/brown_400"
+            android:textSize="14sp" />
+
+        <ListView
+            android:id="@+id/listReplacementRequests"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1"
             android:divider="@android:color/transparent"
             android:dividerHeight="10dp"
             android:visibility="gone" />

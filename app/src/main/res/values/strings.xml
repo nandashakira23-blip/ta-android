@@ -13,7 +13,7 @@
     <!-- Login Screen -->
     <string name="login_title">Login</string>
     <string name="login_nik_hint">NIK (16 digit)</string>
-    <string name="login_pin_hint">PIN (4 digit)</string>
+    <string name="login_pin_hint">PIN (6 digit)</string>
     <string name="login_button">Login</string>
     <string name="login_forgot_pin">Belum aktivasi akun? Klik di sini</string>
     <string name="login_already_activated">Akun sudah teraktivasi. Silakan login dengan PIN Anda.</string>
@@ -30,8 +30,8 @@
     <string name="activation_email_guidelines">Email akan dipakai untuk link verifikasi aktivasi.\nPastikan email dapat diakses.</string>
     <string name="activation_email_continue">Lanjut Daftar Wajah</string>
     <string name="activation_pin_title">Buat PIN</string>
-    <string name="activation_pin_welcome">Langkah terakhir, buat PIN 4 digit untuk login</string>
-    <string name="activation_pin_hint">PIN Baru (4 digit)</string>
+    <string name="activation_pin_welcome">Langkah terakhir, buat PIN 6 digit untuk login</string>
+    <string name="activation_pin_hint">PIN Baru (6 digit)</string>
     <string name="activation_confirm_pin_hint">Konfirmasi PIN</string>
     <string name="activation_button">Aktifkan Akun</string>
     <string name="activation_success">Akun berhasil diaktivasi! Silakan login dengan NIK dan PIN Anda.</string>
@@ -96,8 +96,8 @@
     <string name="change_pin_title">Ganti PIN</string>
     <string name="change_pin_description">Masukkan PIN lama dan PIN baru untuk mengubah PIN Anda</string>
     <string name="change_pin_processing">Mengubah PIN...</string>
-    <string name="change_pin_current_hint">PIN Lama (4 digit)</string>
-    <string name="change_pin_new_hint">PIN Baru (4 digit)</string>
+    <string name="change_pin_current_hint">PIN Lama (6 digit)</string>
+    <string name="change_pin_new_hint">PIN Baru (6 digit)</string>
     <string name="change_pin_confirm_hint">Konfirmasi PIN Baru</string>
     <string name="change_pin_button">Ganti PIN</string>
     <string name="change_pin_success">PIN berhasil diubah!</string>
@@ -109,7 +109,7 @@
     <string name="validation_email_required">Email harus diisi</string>
     <string name="validation_email_invalid">Format email tidak valid</string>
     <string name="validation_pin_required">PIN harus diisi</string>
-    <string name="validation_pin_invalid">PIN harus 4 digit</string>
+    <string name="validation_pin_invalid">PIN harus 6 digit</string>
     <string name="validation_pin_mismatch">PIN tidak sama</string>
     <string name="validation_pin_same">PIN baru tidak boleh sama dengan PIN lama</string>
     <string name="validation_otp_invalid">OTP harus 6 digit angka</string>

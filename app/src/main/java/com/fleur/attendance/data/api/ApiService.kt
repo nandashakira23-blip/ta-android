@@ -18,9 +18,7 @@ interface ApiService {
         @Part("nik") nik: RequestBody,
         @Part("pin") pin: RequestBody,
         @Part("email") email: RequestBody? = null,
-        @Part facePhoto1: MultipartBody.Part,
-        @Part facePhoto2: MultipartBody.Part,
-        @Part facePhoto3: MultipartBody.Part
+        @Part facePhotos: List<MultipartBody.Part>
     ): Call<ActivateResponse>
     
     @POST("api/auth/login")
@@ -45,7 +43,7 @@ interface ApiService {
     fun clockIn(
         @Part("latitude") latitude: RequestBody,
         @Part("longitude") longitude: RequestBody,
-        @Part photo: MultipartBody.Part
+        @Part photos: List<MultipartBody.Part>
     ): Call<ClockInResponse>
     
     @Multipart
@@ -53,7 +51,7 @@ interface ApiService {
     fun clockOut(
         @Part("latitude") latitude: RequestBody,
         @Part("longitude") longitude: RequestBody,
-        @Part photo: MultipartBody.Part
+        @Part photos: List<MultipartBody.Part>
     ): Call<ClockOutResponse>
     
     @GET("api/attendance/status/{id_karyawan}")
@@ -75,6 +73,17 @@ interface ApiService {
     
     @GET("api/attendance/today")
     fun getTodayAttendance(): Call<TodayAttendanceResponse>
+
+    @POST("api/attendance/break/start")
+    fun startBreak(): Call<BreakActionResponse>
+
+    @Multipart
+    @POST("api/attendance/break/end")
+    fun endBreak(
+        @Part("latitude") latitude: RequestBody,
+        @Part("longitude") longitude: RequestBody,
+        @Part photos: List<MultipartBody.Part>
+    ): Call<BreakActionResponse>
     
     // ===== EMPLOYEE PROFILE ENDPOINTS (JWT Auto-Injected) =====
     
@@ -99,6 +108,14 @@ interface ApiService {
     @GET("api/leave-requests")
     fun getLeaveRequests(): Call<LeaveRequestsResponse>
 
+    @GET("api/replacement-requests")
+    fun getReplacementRequests(): Call<LeaveRequestsResponse>
+
+    @GET("api/replacement-candidates")
+    fun getReplacementCandidates(
+        @Query("q") query: String? = null
+    ): Call<ReplacementCandidatesResponse>
+
     @Multipart
     @POST("api/leave-requests")
     fun createLeaveRequest(
@@ -108,9 +125,27 @@ interface ApiService {
         @Part("tanggal_selesai") tanggalSelesai: RequestBody,
         @Part("jam_mulai") jamMulai: RequestBody?,
         @Part("jam_selesai") jamSelesai: RequestBody?,
+        @Part("id_pengganti") idPengganti: RequestBody?,
         @Part("alasan") alasan: RequestBody,
         @Part lampiran: MultipartBody.Part?
     ): Call<LeaveRequestResponse>
+
+    @PUT("api/leave-requests/{id}/cancel")
+    fun cancelLeaveRequest(@Path("id") id: Int): Call<ApiResponse<Any>>
+
+    @FormUrlEncoded
+    @POST("api/replacement-requests/{id}/approve")
+    fun approveReplacementRequest(
+        @Path("id") requestId: Int,
+        @Field("catatan_pengganti") note: String? = null
+    ): Call<ApiResponse<Any>>
+
+    @FormUrlEncoded
+    @POST("api/replacement-requests/{id}/reject")
+    fun rejectReplacementRequest(
+        @Path("id") requestId: Int,
+        @Field("catatan_pengganti") note: String? = null
+    ): Call<ApiResponse<Any>>
     
     // ===== PIN MANAGEMENT ENDPOINTS (JWT Auto-Injected) =====
     

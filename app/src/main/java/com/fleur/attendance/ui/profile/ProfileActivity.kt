@@ -102,7 +102,11 @@ class ProfileActivity : AppCompatActivity() {
         if (!employee.profilePicture.isNullOrEmpty()) {
             val apiAdapter = com.fleur.attendance.data.api.LegacyApiAdapter(this)
             val baseUrl = apiAdapter.getBaseUrl().removeSuffix("/api/")
-            val imageUrl = "$baseUrl/${employee.profilePicture}"
+            val imageUrl = if (employee.profilePicture.startsWith("http://") || employee.profilePicture.startsWith("https://")) {
+                employee.profilePicture
+            } else {
+                "$baseUrl/${employee.profilePicture.removePrefix("/")}"
+            }
             
             com.bumptech.glide.Glide.with(this)
                 .load(imageUrl)

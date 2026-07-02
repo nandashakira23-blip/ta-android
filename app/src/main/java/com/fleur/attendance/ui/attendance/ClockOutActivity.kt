@@ -422,61 +422,75 @@ class ClockOutActivity : AppCompatActivity() {
             return
         }
         
-        // Take photo first
-        takePhotoForClockOut { photoFile ->
-            uploadClockOut(photoFile, location)
+        // Capture multiple frames; the server matches all and keeps the best (multi-frame).
+        captureFramesForClockOut { photoFiles ->
+            uploadClockOut(photoFiles, location)
         }
     }
-    
-    private fun takePhotoForClockOut(onPhotoTaken: (File) -> Unit) {
-        val imageCapture = imageCapture ?: return
-        
+
+    private fun captureFramesForClockOut(onPhotosTaken: (List<File>) -> Unit) {
+        captureFrame(mutableListOf(), 3, onPhotosTaken)
+    }
+
+    // Capture frames sequentially; each takePicture gives a slightly different moment.
+    private fun captureFrame(frames: MutableList<File>, target: Int, onDone: (List<File>) -> Unit) {
+        val imageCapture = imageCapture ?: run {
+            if (frames.isNotEmpty()) onDone(frames) else showError("Kamera belum siap")
+            return
+        }
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
-        val photoFile = File(getExternalFilesDir(null), "$name.jpg")
-        
+        val photoFile = File(getExternalFilesDir(null), "${name}_${frames.size}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        
+
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
                     Log.e("ClockOut", "Photo capture failed: ${exception.message}", exception)
-                    showError("Gagal mengambil foto: ${exception.message}")
+                    if (frames.isNotEmpty()) onDone(frames)
+                    else showError("Gagal mengambil foto: ${exception.message}")
                 }
-                
+
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    Log.d("ClockOut", "Photo capture succeeded")
-                    onPhotoTaken(photoFile)
+                    frames.add(photoFile)
+                    if (frames.size >= target) {
+                        Log.d("ClockOut", "Captured ${frames.size} frame(s)")
+                        onDone(frames)
+                    } else {
+                        captureFrame(frames, target, onDone)
+                    }
                 }
             }
         )
     }
     
-    private fun uploadClockOut(photoFile: File, location: Location) {
+    private fun uploadClockOut(photoFiles: List<File>, location: Location) {
         showLoading(true)
-        
+
+        fun cleanupFrames() {
+            photoFiles.forEach { f ->
+                try { if (f.exists()) f.delete() } catch (e: Exception) { Log.e("ClockOut", "Error deleting frame", e) }
+            }
+        }
+
         val apiAdapter = com.fleur.attendance.data.api.LegacyApiAdapter(this)
-        
-        apiAdapter.clockOut(location.latitude, location.longitude, photoFile,
+
+        apiAdapter.clockOut(location.latitude, location.longitude, photoFiles,
             onSuccess = { response ->
                 showLoading(false)
-                
+
                 if (response.success && response.data != null) {
                     showClockOutSuccess(response.data)
                 } else {
                     showError(response.message)
                 }
-                
-                // Clean up photo file
-                photoFile.delete()
+                cleanupFrames()
             },
             onError = { error ->
                 showLoading(false)
                 showError(error)
-                
-                // Clean up photo file
-                photoFile.delete()
+                cleanupFrames()
             }
         )
     }
@@ -490,9 +504,6 @@ class ClockOutActivity : AppCompatActivity() {
             append("Distance: ${result.location.distance.toInt()}m")
             append("\n")
             append("Face Match: ${if (result.faceMatch.isMatch) "Ya" else "Tidak"}")
-            if (result.faceMatch.isMatch) {
-                append(" (${(result.faceMatch.similarity * 100).toInt()}%)")
-            }
         }
         
         AlertDialog.Builder(this)

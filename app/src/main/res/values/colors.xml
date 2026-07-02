@@ -40,7 +40,18 @@
     <color name="text_primary">#FFFFFF</color>
     <color name="text_secondary">#D4BFA6</color>
     <color name="text_tertiary">#A67C52</color>
+    <color name="text_muted">#6C757D</color>
     
+    <!-- Leave Status Badges (di-set runtime di adapter) -->
+    <color name="leave_status_approved">#14532D</color>
+    <color name="leave_status_rejected">#7F1D1D</color>
+    <color name="leave_status_cancelled">#374151</color>
+    <color name="leave_status_pending_replacement">#1E3A8A</color>
+    <color name="leave_status_pending_manager">#78350F</color>
+
+    <!-- Loading Overlay -->
+    <color name="loading_overlay">#80000000</color>
+
     <!-- Legacy Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
