@@ -36,7 +36,15 @@ class FaceEnrollmentActivity : AppCompatActivity() {
     private lateinit var pin: String
     private var isReactivation: Boolean = false
     private val capturedPhotoPaths = mutableListOf<String>()
-    private val requiredReferencePhotos = 15  // burst target: many multi-pose frames captured in one tap
+    // Pendaftaran PER-FOTO: satu foto terpandu tiap tap (pose beda) -> referensi lebih tajam & bersih.
+    private val posePrompts = listOf(
+        "Hadap lurus ke kamera, tekan Ambil Foto (1/5)",
+        "Hadap depan lagi, wajah jelas & terang, tekan (2/5)",
+        "Angkat dagu sedikit, tekan Ambil Foto (3/5)",
+        "Tundukkan kepala sedikit, tekan Ambil Foto (4/5)",
+        "Hadap lurus, senyum tipis, tekan Ambil Foto (5/5)"
+    )
+    private val requiredReferencePhotos = posePrompts.size
     private var handoffToNextStep = false
 
     companion object {
@@ -74,11 +82,11 @@ class FaceEnrollmentActivity : AppCompatActivity() {
 
         if (isReactivation) {
             binding.tvFaceEnrollmentTitle.text = getString(R.string.face_reenrollment_title)
-            binding.tvFaceEnrollmentInstruction.text = getString(R.string.face_reenrollment_instruction)
         } else {
             binding.tvFaceEnrollmentTitle.text = getString(R.string.face_enrollment_title)
-            binding.tvFaceEnrollmentInstruction.text = getString(R.string.face_enrollment_instruction)
         }
+        // Instruksi pose pertama (mode ambil per-foto)
+        binding.tvFaceEnrollmentInstruction.text = posePrompts.first()
 
         updateCaptureProgress()
     }
@@ -128,21 +136,16 @@ class FaceEnrollmentActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    // One tap captures a BURST of frames while the user slowly rotates their head
-    // (front -> right -> left -> up -> down). Many multi-pose references => higher accuracy.
+    // Ambil SATU foto referensi per tap; setelah tersimpan, instruksi pindah ke pose berikutnya
+    // sampai semua pose lengkap, lalu otomatis lanjut aktivasi.
     private fun takePhoto() {
-        binding.btnCapture.isEnabled = false
-        binding.tvFaceEnrollmentInstruction.text =
-            "Tahan & putar wajah perlahan: depan → kanan → kiri → atas → bawah"
-        captureBurstFrame()
-    }
-
-    private fun captureBurstFrame() {
         val capture = imageCapture ?: run {
-            binding.btnCapture.isEnabled = true
             showError("Kamera belum siap")
             return
         }
+        binding.btnCapture.isEnabled = false
+        binding.tvFaceEnrollmentInstruction.text = "Memproses foto..."
+
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
         val photoFile = File(filesDir, "${name}_${capturedPhotoPaths.size}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -152,14 +155,10 @@ class FaceEnrollmentActivity : AppCompatActivity() {
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
-                    Log.e("FaceEnrollment", "Burst capture failed: ${exception.message}", exception)
-                    // Tolerate occasional frame errors: proceed if we already have enough, else stop.
-                    if (capturedPhotoPaths.size >= 3) {
-                        activateAccount()
-                    } else {
-                        binding.btnCapture.isEnabled = true
-                        showError("Gagal mengambil foto: ${exception.message}")
-                    }
+                    Log.e("FaceEnrollment", "Capture failed: ${exception.message}", exception)
+                    binding.btnCapture.isEnabled = true
+                    binding.tvFaceEnrollmentInstruction.text = posePrompts[capturedPhotoPaths.size]
+                    showError("Gagal mengambil foto, coba lagi: ${exception.message}")
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
@@ -168,7 +167,9 @@ class FaceEnrollmentActivity : AppCompatActivity() {
                     if (capturedPhotoPaths.size >= requiredReferencePhotos) {
                         activateAccount()
                     } else {
-                        captureBurstFrame()
+                        // Lanjut ke pose berikutnya, tunggu tap user
+                        binding.tvFaceEnrollmentInstruction.text = posePrompts[capturedPhotoPaths.size]
+                        binding.btnCapture.isEnabled = true
                     }
                 }
             }
@@ -245,6 +246,8 @@ class FaceEnrollmentActivity : AppCompatActivity() {
 
     private fun showLoading(show: Boolean) {
         binding.loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) com.fleur.attendance.utils.LoadingOverlay.show(this, "Mendaftarkan wajah...")
+        else com.fleur.attendance.utils.LoadingOverlay.hide(this)
         binding.btnCapture.isEnabled = !show
     }
 

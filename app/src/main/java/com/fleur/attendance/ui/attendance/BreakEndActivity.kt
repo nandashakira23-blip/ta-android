@@ -158,9 +158,13 @@ class BreakEndActivity : AppCompatActivity() {
             return
         }
         binding.btnConfirm.isEnabled = false
+        binding.loadingOverlay.visibility = android.view.View.VISIBLE
+        com.fleur.attendance.utils.LoadingOverlay.show(this, "Memverifikasi wajah...")
         binding.tvLocationStatus.text = "Memverifikasi wajah..."
         captureFrames(mutableListOf(), 3) { frames ->
             if (frames.isEmpty()) {
+                binding.loadingOverlay.visibility = android.view.View.GONE
+                com.fleur.attendance.utils.LoadingOverlay.hide(this)
                 binding.btnConfirm.isEnabled = true
                 Toast.makeText(this, "Gagal mengambil foto, coba lagi", Toast.LENGTH_SHORT).show()
                 return@captureFrames
@@ -209,6 +213,8 @@ class BreakEndActivity : AppCompatActivity() {
             },
             onError = { error ->
                 runOnUiThread {
+                    binding.loadingOverlay.visibility = android.view.View.GONE
+                    com.fleur.attendance.utils.LoadingOverlay.hide(this)
                     binding.btnConfirm.isEnabled = true
                     binding.tvLocationStatus.text = "Verifikasi gagal, coba lagi"
                     binding.tvLocationStatus.setTextColor(ContextCompat.getColor(this, R.color.warning_yellow))

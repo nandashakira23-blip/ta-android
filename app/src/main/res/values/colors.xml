@@ -49,8 +49,8 @@
     <color name="leave_status_pending_replacement">#1E3A8A</color>
     <color name="leave_status_pending_manager">#78350F</color>
 
-    <!-- Loading Overlay -->
-    <color name="loading_overlay">#80000000</color>
+    <!-- Loading Overlay (pekat: kamera tertutup saat proses absen) -->
+    <color name="loading_overlay">#F2000000</color>
 
     <!-- Legacy Colors -->
     <color name="black">#FF000000</color>

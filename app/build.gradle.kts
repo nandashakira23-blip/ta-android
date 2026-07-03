@@ -19,13 +19,14 @@ android {
 
     buildTypes {
         debug {
-            // Local backend over LAN for on-device testing (PC Wi-Fi IP)
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.7:3000/\"")
+            // Production VPS (public IP, nginx :80)
+            buildConfigField("String", "API_BASE_URL", "\"http://202.155.13.195/\"")
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"https://api-presensi.vercel.app/\"")
+            // Production VPS (public IP, nginx :80)
+            buildConfigField("String", "API_BASE_URL", "\"http://202.155.13.195/\"")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -65,10 +66,13 @@ dependencies {
     // Security (for EncryptedSharedPreferences)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     
-    // Networking
+    // Networking — okhttp BOM menyamakan versi okhttp + okio + logging-interceptor
+    // (fix crash "java.lang.IllegalStateException: closed" di HttpLoggingInterceptor pada Android 15)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
     
     // Image Loading
     implementation("com.github.bumptech.glide:glide:4.14.2")

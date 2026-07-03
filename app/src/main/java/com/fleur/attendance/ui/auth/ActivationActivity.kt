@@ -159,6 +159,7 @@ class ActivationActivity : AppCompatActivity() {
 
     private fun showLoading(show: Boolean) {
         binding.loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) com.fleur.attendance.utils.LoadingOverlay.show(this) else com.fleur.attendance.utils.LoadingOverlay.hide(this)
         binding.btnActivate.isEnabled = !show
     }
 }

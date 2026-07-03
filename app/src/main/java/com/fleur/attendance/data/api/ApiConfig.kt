@@ -67,12 +67,15 @@ object ApiConfig {
             
             // If we get 401 or 403, try to refresh token and retry once
             if ((response.code == 401 || response.code == 403) && authToken != null) {
-                response.close()
                 
                 // Try to refresh token synchronously
                 val refreshSuccess = tryRefreshTokenSync()
                 
                 if (refreshSuccess && authToken != null) {
+                    // Tutup response lama HANYA saat benar-benar akan retry.
+                    // (Jangan menutup lalu mengembalikan response yang sama — interceptor
+                    //  logging di atasnya akan crash: java.lang.IllegalStateException: closed)
+                    response.close()
                     // Retry the original request with new token
                     val retryRequest = originalRequest.newBuilder()
                         .header("Authorization", "Bearer $authToken")

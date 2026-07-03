@@ -53,9 +53,9 @@ class SplashActivity : AppCompatActivity() {
             Log.d("SplashActivity", "User logged in: $isLoggedIn")
             
             if (isLoggedIn) {
-                // User is logged in, go to MainActivity
-                Log.d("SplashActivity", "Going to MainActivity")
-                navigateToMain()
+                // Verifikasi ke server: kalau akun sudah di-reset admin (tidak aktif lagi),
+                // paksa logout di perangkat ini -> balik ke aktivasi (jangan tetap login).
+                verifyAccountStillActive()
             } else {
                 // Not logged in -> show the activation-status check screen (routes to Login/Activation)
                 Log.d("SplashActivity", "Going to CekStatusActivity")
@@ -69,6 +69,35 @@ class SplashActivity : AppCompatActivity() {
         }
     }
     
+    // Cek ke server apakah akun masih aktif. Kalau sudah di-reset admin -> logout paksa di perangkat ini.
+    private fun verifyAccountStillActive() {
+        val nik = sessionManager?.getEmployeeNik()
+        if (nik.isNullOrBlank()) { navigateToMain(); return }
+        try {
+            val apiAdapter = com.fleur.attendance.data.api.LegacyApiAdapter(this)
+            apiAdapter.checkNik(nik,
+                onSuccess = { response ->
+                    val data = response.data
+                    if (response.success && data != null && data.exists && data.isActivated) {
+                        navigateToMain()
+                    } else {
+                        Log.d("SplashActivity", "Akun sudah di-reset/tidak aktif -> logout paksa")
+                        sessionManager?.clearSession()
+                        navigateToCekStatus()
+                    }
+                },
+                onError = { err ->
+                    // Gagal cek (mis. offline) -> jangan kunci user, tetap masuk
+                    Log.w("SplashActivity", "Gagal verifikasi akun: $err")
+                    navigateToMain()
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("SplashActivity", "verifyAccountStillActive error", e)
+            navigateToMain()
+        }
+    }
+
     private fun navigateToMain() {
         try {
             val intent = Intent(this, MainActivity::class.java)

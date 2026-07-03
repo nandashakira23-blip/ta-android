@@ -606,7 +606,10 @@ class ClockInActivity : AppCompatActivity() {
     }
     
     private fun showLoading(show: Boolean) {
-        // Only show loading in button, no overlay
+        // Loading overlay full-screen: kamera tertutup selama proses absen
+        binding.loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) com.fleur.attendance.utils.LoadingOverlay.show(this, "Memproses absen...")
+        else com.fleur.attendance.utils.LoadingOverlay.hide(this)
         binding.btnClockInCircle.isEnabled = !show
         
         // Show/hide progress bar in button

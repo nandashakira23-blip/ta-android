@@ -153,6 +153,13 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
 
+        <!-- Penangkap crash: tampilkan stack trace di layar (proses terpisah agar tetap muncul saat app mati) -->
+        <activity
+            android:name=".ui.crash.CrashActivity"
+            android:exported="false"
+            android:process=":crash"
+            android:theme="@android:style/Theme.Material.Light" />
+
     </application>
 
 </manifest>

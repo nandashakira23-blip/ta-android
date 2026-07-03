@@ -517,6 +517,9 @@ class ClockOutActivity : AppCompatActivity() {
     }
     
     private fun showLoading(show: Boolean) {
+        binding.loadingOverlay.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) com.fleur.attendance.utils.LoadingOverlay.show(this, "Memproses absen...")
+        else com.fleur.attendance.utils.LoadingOverlay.hide(this)
         binding.btnClockOutCircle.isEnabled = !show
         
         // Show/hide progress bar in button
