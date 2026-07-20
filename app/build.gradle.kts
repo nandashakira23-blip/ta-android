@@ -19,14 +19,14 @@ android {
 
     buildTypes {
         debug {
-            // Production VPS (public IP, nginx :80)
-            buildConfigField("String", "API_BASE_URL", "\"http://202.155.13.195/\"")
+            // Production (HTTPS via Cloudflare -> VPS nginx)
+            buildConfigField("String", "API_BASE_URL", "\"https://fleurpresensi.online/\"")
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
         release {
-            // Production VPS (public IP, nginx :80)
-            buildConfigField("String", "API_BASE_URL", "\"http://202.155.13.195/\"")
+            // Production (HTTPS via Cloudflare -> VPS nginx)
+            buildConfigField("String", "API_BASE_URL", "\"https://fleurpresensi.online/\"")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

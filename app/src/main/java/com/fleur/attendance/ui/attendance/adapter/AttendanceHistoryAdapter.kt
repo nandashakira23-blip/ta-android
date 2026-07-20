@@ -1,6 +1,7 @@
 package com.fleur.attendance.ui.attendance.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -88,6 +89,14 @@ class AttendanceHistoryAdapter : ListAdapter<AttendanceHistoryItem, AttendanceHi
                     tvLocationStatus.setTextColor(itemView.context.getColor(R.color.text_secondary))
                 }
                 
+                // Badge: sedang menggantikan siapa (dari data pengganti yang disetujui)
+                if (!item.menggantikan.isNullOrBlank()) {
+                    tvSubstitute.text = "Menggantikan ${item.menggantikan}"
+                    tvSubstitute.visibility = View.VISIBLE
+                } else {
+                    tvSubstitute.visibility = View.GONE
+                }
+
                 // Show attendance status with enhanced info using extension function
                 tvVerificationMethod.setAttendanceStatus(
                     status = item.status,

@@ -96,6 +96,9 @@ interface ApiService {
         @Path("id") employeeId: Int,
         @Part("email") email: RequestBody?,
         @Part("phone") phone: RequestBody?,
+        @Part("jenis_kelamin") jenisKelamin: RequestBody?,
+        @Part("tanggal_lahir") tanggalLahir: RequestBody?,
+        @Part("address") address: RequestBody?,
         @Part profile_picture: MultipartBody.Part?
     ): Call<UpdateProfileResponse>
     

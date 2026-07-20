@@ -29,6 +29,12 @@
     <string name="activation_email_hint">Email aktif</string>
     <string name="activation_email_guidelines">Email akan dipakai untuk link verifikasi aktivasi.\nPastikan email dapat diakses.</string>
     <string name="activation_email_continue">Lanjut Daftar Wajah</string>
+    <string name="activation_verify_title">Verifikasi Email</string>
+    <string name="activation_send_otp">Kirim OTP</string>
+    <string name="activation_resend_otp">Kirim Ulang OTP</string>
+    <string name="activation_resend_otp_countdown">Kirim Ulang (%1$ds)</string>
+    <string name="activation_otp_hint">Kode OTP</string>
+    <string name="activation_send_otp_first">Kirim OTP dulu ke email ini</string>
     <string name="activation_pin_title">Buat PIN</string>
     <string name="activation_pin_welcome">Langkah terakhir, buat PIN 6 digit untuk login</string>
     <string name="activation_pin_hint">PIN Baru (6 digit)</string>

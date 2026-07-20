@@ -597,10 +597,15 @@ class LeaveRequestActivity : AppCompatActivity() {
 
             val jamMulai = formatApiTime(item.jamMulai)
             val jamSelesai = formatApiTime(item.jamSelesai)
+            val kategoriLabel = when (item.kategori?.lowercase(Locale.getDefault())) {
+                "half_day" -> "Setengah Hari"
+                "hourly" -> "Per Jam"
+                else -> "Seharian"
+            }
             tvJam.text = if (!item.jamMulai.isNullOrBlank() || !item.jamSelesai.isNullOrBlank()) {
-                "Jam: $jamMulai - $jamSelesai"
+                "$kategoriLabel ($jamMulai - $jamSelesai)"
             } else {
-                "Jam: full day"
+                kategoriLabel
             }
 
             tvPengganti.text = if (showReplacementActions) {

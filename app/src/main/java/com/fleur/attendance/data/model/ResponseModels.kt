@@ -104,6 +104,11 @@ data class Employee(
     val emailVerified: Boolean = false,
     @SerializedName("shift_id")
     val shiftId: Int? = null,
+    @SerializedName("jenis_kelamin")
+    val jenisKelamin: String? = null,
+    @SerializedName("tanggal_lahir")
+    val tanggalLahir: String? = null,
+    val address: String? = null,
     @SerializedName("created_at")
     val createdAt: String?
 )
@@ -368,6 +373,7 @@ data class AttendanceHistoryItem(
     val breakInfo: BreakInfo? = null,
     @SerializedName("leave_request_id")
     val leaveRequestId: Int? = null,
+    val menggantikan: String? = null,
     val keterangan: String? = null
 )
 
@@ -773,6 +779,7 @@ data class LeaveRequestItem(
     val namaKaryawan: String? = null,
     val nik: String? = null,
     val jenis: String,
+    val kategori: String? = null,
     @SerializedName("tanggal_mulai")
     val tanggalMulai: String,
     @SerializedName("tanggal_selesai")

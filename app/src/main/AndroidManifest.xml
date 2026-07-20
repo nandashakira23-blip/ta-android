@@ -79,11 +79,6 @@
             android:exported="false"
             android:theme="@style/AppTheme" />
 
-        <activity
-            android:name=".ui.auth.EmailOtpVerificationActivity"
-            android:exported="false"
-            android:theme="@style/AppTheme" />
-        
         <!-- Main Activity -->
         <activity
             android:name=".ui.main.MainActivity"

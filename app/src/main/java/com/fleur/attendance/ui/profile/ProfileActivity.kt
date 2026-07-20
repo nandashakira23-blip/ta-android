@@ -97,6 +97,31 @@ class ProfileActivity : AppCompatActivity() {
             "Belum diisi"
         }
         binding.tvPhone.text = formattedPhone
+
+        // Jenis kelamin
+        if (!employee.jenisKelamin.isNullOrEmpty()) {
+            binding.genderSection.visibility = android.view.View.VISIBLE
+            binding.dividerGender.visibility = android.view.View.VISIBLE
+            binding.tvJenisKelamin.text = when (employee.jenisKelamin) {
+                "L" -> "Laki-laki"
+                "P" -> "Perempuan"
+                else -> employee.jenisKelamin
+            }
+        }
+
+        // Tanggal lahir
+        if (!employee.tanggalLahir.isNullOrEmpty()) {
+            binding.ttlSection.visibility = android.view.View.VISIBLE
+            binding.dividerTtl.visibility = android.view.View.VISIBLE
+            binding.tvTanggalLahir.text = employee.tanggalLahir
+        }
+
+        // Alamat
+        if (!employee.address.isNullOrEmpty()) {
+            binding.addressSection.visibility = android.view.View.VISIBLE
+            binding.dividerAddress.visibility = android.view.View.VISIBLE
+            binding.tvAddress.text = employee.address
+        }
         
         // Load profile picture
         if (!employee.profilePicture.isNullOrEmpty()) {

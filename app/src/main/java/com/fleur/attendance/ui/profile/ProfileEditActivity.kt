@@ -2,6 +2,7 @@ package com.fleur.attendance.ui.profile
 
 import android.Manifest
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -9,6 +10,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +23,9 @@ import com.fleur.attendance.databinding.ActivityProfileEditBinding
 import com.fleur.attendance.utils.SessionManager
 import com.yalantis.ucrop.UCrop
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class ProfileEditActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProfileEditBinding
@@ -77,6 +82,40 @@ class ProfileEditActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener {
             saveProfile()
         }
+
+        // Setup jenis kelamin dropdown
+        val jenisKelaminOptions = listOf("Laki-laki", "Perempuan")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisKelaminOptions)
+        binding.actvJenisKelamin.setAdapter(adapter)
+
+        // Setup tanggal lahir date picker
+        binding.etTanggalLahir.setOnClickListener {
+            showDatePicker()
+        }
+    }
+
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+        // If there's already a date set, use it
+        val currentDate = binding.etTanggalLahir.text.toString()
+        if (currentDate.isNotEmpty()) {
+            try {
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val date = sdf.parse(currentDate)
+                date?.let { calendar.time = it }
+            } catch (_: Exception) {}
+        }
+
+        DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                val formatted = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                binding.etTanggalLahir.setText(formatted)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun checkPermissionAndPickImage() {
@@ -206,6 +245,21 @@ class ProfileEditActivity : AppCompatActivity() {
                 }
                 binding.etPhone.setText(phoneForEdit)
 
+                // Jenis kelamin
+                binding.actvJenisKelamin.setText(
+                    when (employee.jenisKelamin) {
+                        "L" -> "Laki-laki"
+                        "P" -> "Perempuan"
+                        else -> ""
+                    }, false
+                )
+
+                // Tanggal lahir
+                binding.etTanggalLahir.setText(employee.tanggalLahir ?: "")
+
+                // Alamat
+                binding.etAddress.setText(employee.address ?: "")
+
                 currentProfilePictureUrl = employee.profilePicture
                 Log.d("ProfileEdit", "Profile picture URL from server: ${employee.profilePicture}")
                 
@@ -238,6 +292,14 @@ class ProfileEditActivity : AppCompatActivity() {
     private fun saveProfile() {
         val email = binding.etEmail.text.toString().trim()
         var phone = binding.etPhone.text.toString().trim()
+        val jenisKelaminText = binding.actvJenisKelamin.text.toString()
+        val jenisKelamin = when (jenisKelaminText) {
+            "Laki-laki" -> "L"
+            "Perempuan" -> "P"
+            else -> null
+        }
+        val tanggalLahir = binding.etTanggalLahir.text.toString().trim().ifEmpty { null }
+        val address = binding.etAddress.text.toString().trim().ifEmpty { null }
 
         // Validate email
         if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -294,6 +356,9 @@ class ProfileEditActivity : AppCompatActivity() {
             employeeId = employeeId,
             email = email.ifEmpty { null },
             phone = phone.ifEmpty { null },
+            jenisKelamin = jenisKelamin,
+            tanggalLahir = tanggalLahir,
+            address = address,
             profilePicture = imageFile,
             onSuccess = { response ->
                 showLoading(false)

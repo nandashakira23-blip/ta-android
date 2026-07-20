@@ -193,12 +193,15 @@ class LegacyApiAdapter(private val context: Context) {
         employeeId: Int,
         email: String?,
         phone: String?,
+        jenisKelamin: String?,
+        tanggalLahir: String?,
+        address: String?,
         profilePicture: File?,
         onSuccess: (UpdateProfileData) -> Unit,
         onError: (String) -> Unit
     ) {
         employeeRepo.updateProfile(
-            employeeId, email, phone, profilePicture,
+            employeeId, email, phone, jenisKelamin, tanggalLahir, address, profilePicture,
             onSuccess = { response ->
                 response.data?.let { onSuccess(it) }
                     ?: onError("No data returned")

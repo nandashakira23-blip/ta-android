@@ -157,6 +157,14 @@
                                 android:textColorHint="@color/text_muted" />
                         </LinearLayout>
 
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Isi jam untuk izin sebagian (per jam). Kosongkan untuk izin seharian."
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp" />
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

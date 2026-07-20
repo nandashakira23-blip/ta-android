@@ -180,6 +180,9 @@ class EmployeeRepository(private val context: Context) {
         employeeId: Int,
         email: String?,
         phone: String?,
+        jenisKelamin: String?,
+        tanggalLahir: String?,
+        address: String?,
         profilePicture: File?,
         onSuccess: (UpdateProfileResponse) -> Unit,
         onError: (String) -> Unit
@@ -187,13 +190,16 @@ class EmployeeRepository(private val context: Context) {
         try {
             val emailPart = email?.toRequestBody("text/plain".toMediaTypeOrNull())
             val phonePart = phone?.toRequestBody("text/plain".toMediaTypeOrNull())
+            val jenisKelaminPart = jenisKelamin?.toRequestBody("text/plain".toMediaTypeOrNull())
+            val tanggalLahirPart = tanggalLahir?.toRequestBody("text/plain".toMediaTypeOrNull())
+            val addressPart = address?.toRequestBody("text/plain".toMediaTypeOrNull())
             
             val profilePicturePart = profilePicture?.let { file ->
                 val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
                 MultipartBody.Part.createFormData("profile_picture", file.name, requestFile)
             }
             
-            apiService.updateEmployeeProfile(employeeId, emailPart, phonePart, profilePicturePart)
+            apiService.updateEmployeeProfile(employeeId, emailPart, phonePart, jenisKelaminPart, tanggalLahirPart, addressPart, profilePicturePart)
                 .enqueue(object : Callback<UpdateProfileResponse> {
                     override fun onResponse(
                         call: Call<UpdateProfileResponse>,

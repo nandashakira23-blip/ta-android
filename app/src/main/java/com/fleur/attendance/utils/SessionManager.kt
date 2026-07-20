@@ -21,6 +21,9 @@ class SessionManager(context: Context) {
         private const val KEY_EMPLOYEE_PHOTO = "employee_photo"
         private const val KEY_EMPLOYEE_EMAIL = "employee_email"
         private const val KEY_EMPLOYEE_PHONE = "employee_phone"
+        private const val KEY_EMPLOYEE_JENIS_KELAMIN = "employee_jenis_kelamin"
+        private const val KEY_EMPLOYEE_TANGGAL_LAHIR = "employee_tanggal_lahir"
+        private const val KEY_EMPLOYEE_ADDRESS = "employee_address"
         private const val KEY_SAVED_NIK = "saved_nik"
     }
     
@@ -35,6 +38,9 @@ class SessionManager(context: Context) {
         employee.jabatan?.let { editor.putInt(KEY_EMPLOYEE_POSITION_ID, it.id) }
         employee.workScheduleId?.let { editor.putInt(KEY_EMPLOYEE_WORK_SCHEDULE_ID, it) }
         employee.fotoReferensi?.let { editor.putString(KEY_EMPLOYEE_PHOTO, it) }
+        employee.jenisKelamin?.let { editor.putString(KEY_EMPLOYEE_JENIS_KELAMIN, it) }
+        employee.tanggalLahir?.let { editor.putString(KEY_EMPLOYEE_TANGGAL_LAHIR, it) }
+        employee.address?.let { editor.putString(KEY_EMPLOYEE_ADDRESS, it) }
         editor.apply()
         
         // Also save to TokenManager

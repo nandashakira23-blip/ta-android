@@ -12,6 +12,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -20,6 +21,37 @@ import java.io.File
 class LeaveRepository(private val context: Context) {
 
     private val apiService: ApiService = ApiConfig.getApiService()
+
+    /**
+     * Ambil pesan error asli dari body respons API (JSON {success, message, code}).
+     * Server mengirim alasan spesifik; jangan ditelan jadi pesan generik.
+     */
+    private fun parseErrorMessage(errorBody: okhttp3.ResponseBody?, defaultMessage: String): String {
+        return try {
+            val errorJson = errorBody?.string()
+            if (errorJson != null) {
+                val jsonObject = JSONObject(errorJson)
+                val message = jsonObject.optString("message", "")
+                val code = jsonObject.optString("code", "")
+                when (code) {
+                    "LEAVE_DATE_OVERLAP" -> "Tanggal pengajuan bentrok dengan pengajuan lain yang masih aktif"
+                    "REPLACEMENT_NOT_FOUND" -> "Karyawan pengganti tidak ditemukan atau tidak aktif"
+                    "INVALID_REPLACEMENT_EMPLOYEE" -> "Karyawan pengganti tidak boleh sama dengan pengaju"
+                    "SICK_NOTE_REQUIRED" -> "Surat keterangan sakit wajib dilampirkan"
+                    "MISSING_PARTIAL_TIME" -> "Jam mulai dan jam selesai wajib diisi"
+                    "MISSING_LEAVE_DATA" -> "Tanggal dan alasan wajib diisi"
+                    "INVALID_LEAVE_TYPE" -> "Jenis harus cuti, izin, atau sakit"
+                    "INVALID_DATE_RANGE" -> "Rentang tanggal tidak valid"
+                    "UNAUTHORIZED", "TOKEN_EXPIRED" -> "Sesi telah berakhir. Silakan login kembali"
+                    else -> if (message.isNotEmpty()) message else defaultMessage
+                }
+            } else {
+                defaultMessage
+            }
+        } catch (e: Exception) {
+            defaultMessage
+        }
+    }
 
     fun getLeaveRequests(
         onSuccess: (LeaveRequestsResponse) -> Unit,
@@ -33,7 +65,7 @@ class LeaveRepository(private val context: Context) {
                 if (response.isSuccessful) {
                     response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
                 } else {
-                    onError("Gagal mengambil riwayat Absensi")
+                    onError(parseErrorMessage(response.errorBody(), "Gagal mengambil riwayat Absensi"))
                 }
             }
 
@@ -55,7 +87,7 @@ class LeaveRepository(private val context: Context) {
                 if (response.isSuccessful) {
                     response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
                 } else {
-                    onError("Gagal mengambil daftar approval pengganti")
+                    onError(parseErrorMessage(response.errorBody(), "Gagal mengambil daftar approval pengganti"))
                 }
             }
 
@@ -78,7 +110,7 @@ class LeaveRepository(private val context: Context) {
                 if (response.isSuccessful) {
                     response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
                 } else {
-                    onError("Gagal mengambil daftar karyawan pengganti")
+                    onError(parseErrorMessage(response.errorBody(), "Gagal mengambil daftar karyawan pengganti"))
                 }
             }
 
@@ -128,7 +160,7 @@ class LeaveRepository(private val context: Context) {
                 if (response.isSuccessful) {
                     response.body()?.let(onSuccess) ?: onError("Tidak ada respons dari server")
                 } else {
-                    onError("Gagal mengirim pengajuan Absensi")
+                    onError(parseErrorMessage(response.errorBody(), "Gagal mengirim pengajuan Absensi"))
                 }
             }
 
