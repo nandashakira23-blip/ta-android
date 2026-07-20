@@ -72,3 +72,7 @@ data class LeaveRequestPayload(
     val idPengganti: Int? = null,
     val alasan: String
 )
+
+data class PendingCountData(
+    val pending: Int = 0
+)

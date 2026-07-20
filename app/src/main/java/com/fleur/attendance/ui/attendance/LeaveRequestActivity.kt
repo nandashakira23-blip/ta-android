@@ -112,11 +112,26 @@ class LeaveRequestActivity : AppCompatActivity() {
         setupTabs()
         loadReplacementCandidates()
         loadHistory()
+
+        // Dibuka dari notif beranda -> langsung ke tab Pengganti
+        if (intent.getStringExtra("open_tab") == "pengganti") {
+            tabLayout.getTabAt(2)?.select()
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
         finish()
         return true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Auto-refresh saat kembali ke layar ini (mis. setelah manager approve) tanpa buka ulang app
+        if (!::tabLayout.isInitialized) return
+        when (tabLayout.selectedTabPosition) {
+            1 -> loadHistory()
+            2 -> loadReplacementRequests()
+        }
     }
 
     private fun setupForm() {
@@ -183,7 +198,13 @@ class LeaveRequestActivity : AppCompatActivity() {
                 }
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+                // Ketuk tab yang sama = refresh data tanpa buka ulang app
+                when (tab?.position ?: 0) {
+                    1 -> loadHistory()
+                    2 -> loadReplacementRequests()
+                }
+            }
         })
     }
 

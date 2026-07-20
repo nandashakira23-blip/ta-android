@@ -7,6 +7,7 @@ import com.fleur.attendance.data.model.ApiResponse
 import com.fleur.attendance.data.model.LeaveRequestPayload
 import com.fleur.attendance.data.model.LeaveRequestResponse
 import com.fleur.attendance.data.model.LeaveRequestsResponse
+import com.fleur.attendance.data.model.PendingCountData
 import com.fleur.attendance.data.model.ReplacementCandidatesResponse
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -95,6 +96,28 @@ class LeaveRepository(private val context: Context) {
             }
 
             override fun onFailure(call: Call<LeaveRequestsResponse>, t: Throwable) {
+                onError(t.message ?: "Kesalahan jaringan")
+            }
+        })
+    }
+
+    fun getPendingReplacementCount(
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        apiService.getPendingReplacementCount().enqueue(object : Callback<ApiResponse<PendingCountData>> {
+            override fun onResponse(
+                call: Call<ApiResponse<PendingCountData>>,
+                response: Response<ApiResponse<PendingCountData>>
+            ) {
+                if (response.isSuccessful) {
+                    onSuccess(response.body()?.data?.pending ?: 0)
+                } else {
+                    onError(parseErrorMessage(response.errorBody(), "Gagal mengambil jumlah permintaan pengganti"))
+                }
+            }
+
+            override fun onFailure(call: Call<ApiResponse<PendingCountData>>, t: Throwable) {
                 onError(t.message ?: "Kesalahan jaringan")
             }
         })

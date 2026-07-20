@@ -162,6 +162,31 @@ class MainActivity : AppCompatActivity() {
         binding?.scrollView?.setOnScrollChangeListener { _, _, scrollY, _, _ ->
             binding?.swipeRefresh?.isEnabled = scrollY == 0
         }
+
+        binding?.cardPendingReplacement?.setOnClickListener {
+            val intent = Intent(this, com.fleur.attendance.ui.attendance.LeaveRequestActivity::class.java)
+            intent.putExtra("open_tab", "pengganti")
+            startActivity(intent)
+        }
+    }
+
+    private fun loadPendingReplacementCount() {
+        com.fleur.attendance.data.repository.LeaveRepository(this).getPendingReplacementCount(
+            onSuccess = { count ->
+                runOnUiThread {
+                    if (count > 0) {
+                        binding?.tvPendingReplacement?.text =
+                            "Ada $count permintaan pengganti menunggu keputusanmu"
+                        binding?.cardPendingReplacement?.visibility = android.view.View.VISIBLE
+                    } else {
+                        binding?.cardPendingReplacement?.visibility = android.view.View.GONE
+                    }
+                }
+            },
+            onError = {
+                runOnUiThread { binding?.cardPendingReplacement?.visibility = android.view.View.GONE }
+            }
+        )
     }
     
     // ========== CLICK HANDLERS ==========
@@ -766,7 +791,8 @@ class MainActivity : AppCompatActivity() {
         loadProfilePicture()
         loadAttendanceData()
         getCurrentLocation()
-        
+        loadPendingReplacementCount()
+
         binding?.swipeRefresh?.postDelayed({
             binding?.swipeRefresh?.isRefreshing = false
         }, 1500)

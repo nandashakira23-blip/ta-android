@@ -114,6 +114,9 @@ interface ApiService {
     @GET("api/replacement-requests")
     fun getReplacementRequests(): Call<LeaveRequestsResponse>
 
+    @GET("api/replacement-requests/pending-count")
+    fun getPendingReplacementCount(): Call<ApiResponse<PendingCountData>>
+
     @GET("api/replacement-candidates")
     fun getReplacementCandidates(
         @Query("q") query: String? = null
