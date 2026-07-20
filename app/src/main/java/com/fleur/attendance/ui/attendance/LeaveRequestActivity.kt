@@ -38,6 +38,9 @@ class LeaveRequestActivity : AppCompatActivity() {
 
     private lateinit var repository: LeaveRepository
     private lateinit var rgLeaveType: RadioGroup
+    private lateinit var rgLeaveMode: RadioGroup
+    private lateinit var tvLeaveModeHint: TextView
+    private lateinit var layoutPengganti: LinearLayout
     private lateinit var etTanggalMulai: EditText
     private lateinit var etTanggalSelesai: EditText
     private lateinit var etJamMulai: EditText
@@ -82,6 +85,9 @@ class LeaveRequestActivity : AppCompatActivity() {
         repository = LeaveRepository(this)
 
         rgLeaveType = findViewById(R.id.rgLeaveType)
+        rgLeaveMode = findViewById(R.id.rgLeaveMode)
+        tvLeaveModeHint = findViewById(R.id.tvLeaveModeHint)
+        layoutPengganti = findViewById(R.id.layoutPengganti)
         etTanggalMulai = findViewById(R.id.etTanggalMulai)
         etTanggalSelesai = findViewById(R.id.etTanggalSelesai)
         etJamMulai = findViewById(R.id.etJamMulai)
@@ -139,6 +145,26 @@ class LeaveRequestActivity : AppCompatActivity() {
         btnSubmit.setOnClickListener {
             submitRequest()
         }
+
+        rgLeaveMode.setOnCheckedChangeListener { _, _ -> applyLeaveMode() }
+        applyLeaveMode()
+    }
+
+    private fun getSelectedLeaveMode(): String {
+        return if (rgLeaveMode.checkedRadioButtonId == R.id.rbUrgent) "urgent" else "planned"
+    }
+
+    private fun applyLeaveMode() {
+        val urgent = getSelectedLeaveMode() == "urgent"
+        // Mendadak: pengganti ditentukan Manager -> sembunyikan & kosongkan field pengganti.
+        layoutPengganti.visibility = if (urgent) View.GONE else View.VISIBLE
+        if (urgent) unlockReplacementCandidate(showDropdown = false)
+        tvLeaveModeHint.text = if (urgent) {
+            "Mendadak: langsung ke Manager. Pengganti ditentukan Manager setelah disetujui."
+        } else {
+            "Terencana: pilih pengganti dulu (perlu ACC pengganti lalu Manager)."
+        }
+        actvPengganti.hint = if (urgent) "Pengganti ditentukan Manager" else "Pilih karyawan pengganti (wajib)"
     }
 
     private fun setupTabs() {
@@ -202,17 +228,26 @@ class LeaveRequestActivity : AppCompatActivity() {
     }
 
     private fun submitRequest() {
-        val leaveType = getSelectedLeaveType()
+        val leaveType = getSelectedLeaveType()      // jenis: cuti/izin/sakit
+        val leaveMode = getSelectedLeaveMode()       // tipe: planned/urgent
         val replacementSelection = getSelectedReplacement()
         if (!replacementSelection.isValid) return
 
+        // Terencana wajib pengganti; Mendadak tidak boleh pilih pengganti (ditentukan Manager).
+        val idPengganti: Int? = if (leaveMode == "urgent") null else replacementSelection.id
+        if (leaveMode == "planned" && idPengganti == null) {
+            Toast.makeText(this, "Pengajuan Terencana wajib memilih karyawan pengganti", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val payload = LeaveRequestPayload(
             jenis = leaveType,
+            leaveType = leaveMode,
             tanggalMulai = etTanggalMulai.text.toString().trim(),
             tanggalSelesai = etTanggalSelesai.text.toString().trim(),
             jamMulai = etJamMulai.text.toString().trim().ifBlank { null },
             jamSelesai = etJamSelesai.text.toString().trim().ifBlank { null },
-            idPengganti = replacementSelection.id,
+            idPengganti = idPengganti,
             alasan = etAlasan.text.toString().trim()
         )
 
@@ -472,6 +507,8 @@ class LeaveRequestActivity : AppCompatActivity() {
         unlockReplacementCandidate(showDropdown = false)
         etAlasan.text?.clear()
         rgLeaveType.check(R.id.rbIzin)
+        rgLeaveMode.check(R.id.rbPlanned)
+        applyLeaveMode()
         selectedAttachmentUri = null
         tvAttachmentName.text = "Belum ada lampiran"
     }

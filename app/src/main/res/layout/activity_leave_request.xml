@@ -94,6 +94,48 @@
                                 android:textColor="@color/text_primary" />
                         </RadioGroup>
 
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="Tipe pengajuan"
+                            android:textColor="@color/brown_400"
+                            android:textSize="12sp" />
+
+                        <RadioGroup
+                            android:id="@+id/rgLeaveMode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal">
+
+                            <RadioButton
+                                android:id="@+id/rbPlanned"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:checked="true"
+                                android:text="Terencana"
+                                android:textColor="@color/text_primary" />
+
+                            <RadioButton
+                                android:id="@+id/rbUrgent"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Mendadak"
+                                android:textColor="@color/text_primary" />
+                        </RadioGroup>
+
+                        <TextView
+                            android:id="@+id/tvLeaveModeHint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Terencana: pilih pengganti dulu (perlu ACC pengganti lalu Manager)."
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp" />
+
                         <EditText
                             android:id="@+id/etTanggalMulai"
                             android:layout_width="match_parent"
@@ -166,6 +208,7 @@
                             android:textSize="11sp" />
 
                         <LinearLayout
+                            android:id="@+id/layoutPengganti"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"

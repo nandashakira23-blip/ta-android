@@ -41,6 +41,9 @@ class LeaveRepository(private val context: Context) {
                     "MISSING_PARTIAL_TIME" -> "Jam mulai dan jam selesai wajib diisi"
                     "MISSING_LEAVE_DATA" -> "Tanggal dan alasan wajib diisi"
                     "INVALID_LEAVE_TYPE" -> "Jenis harus cuti, izin, atau sakit"
+                    "INVALID_LEAVE_REQUEST_TYPE" -> "Tipe pengajuan harus Terencana atau Mendadak"
+                    "REPLACEMENT_REQUIRED_FOR_PLANNED" -> "Pengajuan Terencana wajib memilih karyawan pengganti"
+                    "SUBSTITUTE_NOT_ALLOWED_FOR_URGENT" -> "Pengajuan Mendadak tidak memilih pengganti; pengganti ditentukan Manager"
                     "INVALID_DATE_RANGE" -> "Rentang tanggal tidak valid"
                     "UNAUTHORIZED", "TOKEN_EXPIRED" -> "Sesi telah berakhir. Silakan login kembali"
                     else -> if (message.isNotEmpty()) message else defaultMessage
@@ -144,6 +147,7 @@ class LeaveRepository(private val context: Context) {
 
         apiService.createLeaveRequest(
             jenis = payload.jenis.toRequestBody("text/plain".toMediaTypeOrNull()),
+            leaveType = payload.leaveType.toRequestBody("text/plain".toMediaTypeOrNull()),
             kategori = kategori.toRequestBody("text/plain".toMediaTypeOrNull()),
             tanggalMulai = payload.tanggalMulai.toRequestBody("text/plain".toMediaTypeOrNull()),
             tanggalSelesai = payload.tanggalSelesai.toRequestBody("text/plain".toMediaTypeOrNull()),

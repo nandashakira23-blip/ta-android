@@ -123,6 +123,7 @@ interface ApiService {
     @POST("api/leave-requests")
     fun createLeaveRequest(
         @Part("jenis") jenis: RequestBody,
+        @Part("leave_type") leaveType: RequestBody?,
         @Part("kategori") kategori: RequestBody,
         @Part("tanggal_mulai") tanggalMulai: RequestBody,
         @Part("tanggal_selesai") tanggalSelesai: RequestBody,

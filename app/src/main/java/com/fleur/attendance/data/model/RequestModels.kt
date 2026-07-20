@@ -58,6 +58,8 @@ data class BreakEndRequest(
 
 data class LeaveRequestPayload(
     val jenis: String,
+    @SerializedName("leave_type")
+    val leaveType: String = "planned",
     @SerializedName("tanggal_mulai")
     val tanggalMulai: String,
     @SerializedName("tanggal_selesai")
