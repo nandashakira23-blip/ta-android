@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (count > 0) {
                         binding?.tvPendingReplacement?.text =
-                            "Ada $count permintaan pengganti menunggu keputusanmu"
+                            "Ada $count tugas pengganti — ketuk untuk cek"
                         binding?.cardPendingReplacement?.visibility = android.view.View.VISIBLE
                     } else {
                         binding?.cardPendingReplacement?.visibility = android.view.View.GONE
