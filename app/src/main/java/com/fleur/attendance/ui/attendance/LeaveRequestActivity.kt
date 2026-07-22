@@ -174,6 +174,13 @@ class LeaveRequestActivity : AppCompatActivity() {
         // Mendadak: pengganti ditentukan Manager -> sembunyikan & kosongkan field pengganti.
         layoutPengganti.visibility = if (urgent) View.GONE else View.VISIBLE
         if (urgent) unlockReplacementCandidate(showDropdown = false)
+        // Mendadak: tidak pakai lampiran -> sembunyikan tombol lampiran & kosongkan pilihannya.
+        btnPickAttachment.visibility = if (urgent) View.GONE else View.VISIBLE
+        tvAttachmentName.visibility = if (urgent) View.GONE else View.VISIBLE
+        if (urgent) {
+            selectedAttachmentUri = null
+            tvAttachmentName.text = "Belum ada lampiran"
+        }
         tvLeaveModeHint.text = if (urgent) {
             "Mendadak: langsung ke Manager. Pengganti ditentukan Manager setelah disetujui."
         } else {
@@ -281,7 +288,7 @@ class LeaveRequestActivity : AppCompatActivity() {
             return
         }
 
-        if (leaveType == "sakit" && selectedAttachmentUri == null) {
+        if (leaveType == "sakit" && leaveMode != "urgent" && selectedAttachmentUri == null) {
             Toast.makeText(this, "Jenis sakit wajib lampiran surat", Toast.LENGTH_SHORT).show()
             return
         }
